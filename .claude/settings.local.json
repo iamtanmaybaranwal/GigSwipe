@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Rename-Item -Path \"d:\\\\HireApp\\\\gigswipe\\\\gigswipe\\\\app\\\\student\" -NewName \"worker\" -ErrorAction Stop)"
+    ]
+  }
+}
