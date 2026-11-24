@@ -7,6 +7,8 @@ export interface IMessage extends Document {
   senderName: string;
   senderRole: UserRole;
   text: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const MessageSchema = new Schema<IMessage>(
@@ -15,20 +17,9 @@ const MessageSchema = new Schema<IMessage>(
     senderId:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
     senderName:    { type: String, required: true },
     senderRole:    { type: String, enum: ['worker', 'business'], required: true },
-    text:          { type: String, required: true, trim: true },
+    text:          { type: String, required: true, trim: true, maxlength: 2000 },
   },
-  {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform(_doc, ret: Record<string, any>) {
-        ret.id = ret._id.toString();
-        ret.timestamp = ret.createdAt?.toISOString(); // match existing frontend field name
-        delete ret._id;
-        delete ret.__v;
-      },
-    },
-  }
+  { timestamps: true }
 );
 
 MessageSchema.index({ applicationId: 1, createdAt: 1 });

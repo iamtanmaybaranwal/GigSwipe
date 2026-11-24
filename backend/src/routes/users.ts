@@ -1,33 +1,24 @@
 import { Router } from 'express';
-import { users, applications } from '../store';
+import { ah, HttpError, requireId } from '../utils/http';
+import { serializePublicUser } from '../utils/serialize';
 import UserModel from '../models/User';
+import ApplicationModel from '../models/Application';
 
 const router = Router();
 
-// GET /api/users/:userId — public profile + completion stats (no auth required)
-router.get('/:userId', async (req: any, res: any) => {
-  const { userId } = req.params;
+// GET /api/users/:userId — public profile + completion stats (no auth required).
+// Email is never included in public profiles.
+router.get('/:userId', ah(async (req, res) => {
+  const userId = requireId(req.params.userId, 'User');
+  const user = await UserModel.findById(userId).lean();
+  if (!user) throw new HttpError(404, 'User not found');
 
-  // Fast path: in-memory store
-  let user = users.get(userId) as any;
+  const [gigsCompleted, workersHired] = await Promise.all([
+    ApplicationModel.countDocuments({ workerId: userId, status: 'hired' }),
+    ApplicationModel.countDocuments({ businessId: userId, status: 'hired' }),
+  ]);
 
-  if (!user) {
-    // Fall back to MongoDB
-    try {
-      const dbUser = await UserModel.findById(userId);
-      if (!dbUser) return res.status(404).json({ error: 'User not found' });
-      user = dbUser.toJSON();
-    } catch {
-      return res.status(404).json({ error: 'User not found' });
-    }
-  }
-
-  // Completion stats from in-memory store
-  const hiredApps    = [...applications.values()].filter(a => a.status === 'hired');
-  const gigsCompleted = hiredApps.filter(a => a.workerId   === userId).length;
-  const workersHired  = hiredApps.filter(a => a.businessId === userId).length;
-
-  return res.json({ user, gigsCompleted, workersHired });
-});
+  res.json({ user: serializePublicUser(user), gigsCompleted, workersHired });
+}));
 
 export default router;
