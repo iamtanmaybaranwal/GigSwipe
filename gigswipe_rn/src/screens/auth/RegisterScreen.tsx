@@ -7,6 +7,7 @@ import { colors, font } from '../../theme';
 import { Banner, Button, Header, Pill, TextField } from '../../components/ui';
 import { isValidEmail } from '../../utils/format';
 import type { RootScreen } from '../../navigation/types';
+import { t } from '../../i18n';
 
 export default function RegisterScreen({ route }: RootScreen<'Register'>) {
   const { role } = route.params;
@@ -23,10 +24,10 @@ export default function RegisterScreen({ route }: RootScreen<'Register'>) {
   const [touched, setTouched] = useState(false);
 
   const errors = {
-    name: !name.trim() ? 'Your name is required' : null,
-    email: !isValidEmail(email) ? 'Enter a valid email address' : null,
-    password: password.length < 8 ? 'Use at least 8 characters' : null,
-    confirm: confirm !== password ? 'Passwords do not match' : null,
+    name: !name.trim() ? t('Your name is required') : null,
+    email: !isValidEmail(email) ? t('Enter a valid email address') : null,
+    password: password.length < 8 ? t('Use at least 8 characters') : null,
+    confirm: confirm !== password ? t('Passwords do not match') : null,
   };
   const valid = !Object.values(errors).some(Boolean);
 
@@ -54,37 +55,37 @@ export default function RegisterScreen({ route }: RootScreen<'Register'>) {
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <Header title="Create account" />
+      <Header title={t('Create account')} />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Pill text={isWorker ? 'Job Seeker' : 'Job Giver'} icon={isWorker ? 'person-outline' : 'storefront-outline'}
+          <Pill text={isWorker ? t('Job Seeker') : t('Job Giver')} icon={isWorker ? 'person-outline' : 'storefront-outline'}
             color={isWorker ? colors.accent : colors.navy} />
-          <Text style={[font.h2, { marginTop: 12 }]}>{isWorker ? 'Start finding work nearby' : 'Start hiring nearby'}</Text>
-          <Text style={[font.small, { marginTop: 4, marginBottom: 22 }]}>It takes less than a minute.</Text>
+          <Text style={[font.h2, { marginTop: 12 }]}>{isWorker ? t('Start finding work nearby') : t('Start hiring nearby')}</Text>
+          <Text style={[font.small, { marginTop: 4, marginBottom: 22 }]}>{t('It takes less than a minute.')}</Text>
 
-          <TextField label="Full name *" icon="person-outline" value={name} onChangeText={setName}
-            placeholder="Jordan Taylor" autoComplete="name" error={show('name', name)} maxLength={80} />
-          <TextField label="Email *" icon="mail-outline" value={email} onChangeText={setEmail}
-            placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" autoComplete="email"
+          <TextField label={t('Full name *')} icon="person-outline" value={name} onChangeText={setName}
+            placeholder={t('Jordan Taylor')} autoComplete="name" error={show('name', name)} maxLength={80} />
+          <TextField label={t('Email *')} icon="mail-outline" value={email} onChangeText={setEmail}
+            placeholder={t('you@email.com')} keyboardType="email-address" autoCapitalize="none" autoComplete="email"
             error={show('email', email)} />
-          <TextField label="Password *" icon="lock-closed-outline" value={password} onChangeText={setPassword}
-            placeholder="At least 8 characters" secure autoCapitalize="none" autoComplete="new-password"
+          <TextField label={t('Password *')} icon="lock-closed-outline" value={password} onChangeText={setPassword}
+            placeholder={t('At least 8 characters')} secure autoCapitalize="none" autoComplete="new-password"
             error={show('password', password)} />
-          <TextField label="Confirm password *" icon="lock-closed-outline" value={confirm} onChangeText={setConfirm}
-            placeholder="Repeat your password" secure autoCapitalize="none" error={show('confirm', confirm)} />
+          <TextField label={t('Confirm password *')} icon="lock-closed-outline" value={confirm} onChangeText={setConfirm}
+            placeholder={t('Repeat your password')} secure autoCapitalize="none" error={show('confirm', confirm)} />
 
           {isWorker ? (
-            <TextField label="What do you do? (optional)" icon="briefcase-outline" value={extra} onChangeText={setExtra}
-              placeholder="e.g. Barista, Electrician, Designer, Student" maxLength={120} />
+            <TextField label={t('What do you do? (optional)')} icon="briefcase-outline" value={extra} onChangeText={setExtra}
+              placeholder={t('e.g. Barista, Electrician, Designer, Student')} maxLength={120} />
           ) : (
-            <TextField label="Business name (optional)" icon="storefront-outline" value={extra} onChangeText={setExtra}
-              placeholder="Leave empty if you're hiring as an individual" maxLength={100} />
+            <TextField label={t('Business name (optional)')} icon="storefront-outline" value={extra} onChangeText={setExtra}
+              placeholder={t("Leave empty if you're hiring as an individual")} maxLength={100} />
           )}
 
           {error ? <Banner icon="alert-circle-outline" text={error} color={colors.red} /> : null}
 
-          <Button title="Create account" onPress={submit} loading={busy} style={{ marginTop: 16 }} />
-          <Text style={s.legal}>By creating an account you agree to the Terms of Service and Privacy Policy.</Text>
+          <Button title={t('Create account')} onPress={submit} loading={busy} style={{ marginTop: 16 }} />
+          <Text style={s.legal}>{t('By creating an account you agree to the Terms of Service and Privacy Policy.')}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

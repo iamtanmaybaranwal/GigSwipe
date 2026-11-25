@@ -1,9 +1,11 @@
 // Small, reusable building blocks used across every screen.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Image, Pressable, StyleSheet, Switch, Text, TextInput, View,
   type StyleProp, type TextInputInstance, type TextInputProps, type ViewStyle,
 } from 'react-native';
+import { mediaUrl } from '../api/client';
+import { t } from '../i18n';
 import { useNavigation } from '@react-navigation/native';
 import { colors, font, radius, shadow, spacing, tint } from '../theme';
 import { initials } from '../utils/format';
@@ -90,7 +92,7 @@ export function Header({ title, subtitle, right, onBack, back = true }: {
   return (
     <View style={s.header}>
       {back ? (
-        <IconButton name="arrow-back" label="Go back" onPress={onBack ?? (() => nav.canGoBack() && nav.goBack())} />
+        <IconButton name="arrow-back" label={t('Go back')} onPress={onBack ?? (() => nav.canGoBack() && nav.goBack())} />
       ) : <View style={{ width: 44 }} />}
       <View style={s.headerCenter}>
         {title ? <Text style={s.headerTitle} numberOfLines={1}>{title}</Text> : null}
@@ -134,7 +136,7 @@ export function TextField({
           style={[s.input, multiline && { minHeight: 96, paddingTop: 0 }]}
         />
         {secure ? (
-          <Pressable onPress={() => setHidden(h => !h)} hitSlop={10} accessibilityLabel={hidden ? 'Show password' : 'Hide password'}>
+          <Pressable onPress={() => setHidden(h => !h)} hitSlop={10} accessibilityLabel={hidden ? t('Show password') : t('Hide password')}>
             <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={18} color={colors.muted} />
           </Pressable>
         ) : null}
@@ -150,14 +152,62 @@ export function TextField({
 }
 
 // ── Display ───────────────────────────────────────────────────────────────────
-export function Avatar({ name, color, size = 44, square }: { name?: string; color?: string; size?: number; square?: boolean }) {
+/** Profile photo, or coloured initials when there's no photo (or it fails to load). */
+export function Avatar({ name, color, size = 44, square, photo, badge }: {
+  name?: string; color?: string; size?: number; square?: boolean; photo?: string | null;
+  /** Small green dot, e.g. "available now" */
+  badge?: boolean;
+}) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [photo]);
+  const uri = !failed ? mediaUrl(photo) : undefined;
+  const r = square ? size * 0.3 : size / 2;
   return (
-    <View style={{
-      width: size, height: size, borderRadius: square ? size * 0.3 : size / 2,
-      backgroundColor: color || colors.accent, alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Text style={{ color: colors.white, fontWeight: '800', fontSize: size * 0.38 }}>{initials(name)}</Text>
+    <View style={{ width: size, height: size }}>
+      {uri ? (
+        <Image source={{ uri }} onError={() => setFailed(true)} accessibilityIgnoresInvertColors
+          style={{ width: size, height: size, borderRadius: r, backgroundColor: colors.surfaceAlt }} />
+      ) : (
+        <View style={{ width: size, height: size, borderRadius: r, backgroundColor: color || colors.accent, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: colors.white, fontWeight: '800', fontSize: size * 0.38 }}>{initials(name)}</Text>
+        </View>
+      )}
+      {badge ? (
+        <View style={[s.badge, { width: Math.max(10, size * 0.26), height: Math.max(10, size * 0.26), borderRadius: size }]} />
+      ) : null}
     </View>
+  );
+}
+
+/** Selectable chip used for filters and pickers. */
+export function Chip({ label, selected, onPress, icon, style, color = colors.accent }: {
+  label: string; selected?: boolean; onPress?: () => void; icon?: IconName; style?: StyleProp<ViewStyle>; color?: string;
+}) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!selected }}
+      style={[s.chip, selected && { borderColor: color, backgroundColor: tint(color, 0.1) }, style]}>
+      {icon ? <Icon name={icon} size={15} color={selected ? color : colors.muted} /> : null}
+      <Text style={[s.chipText, selected && { color }]} numberOfLines={1}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** A labelled on/off switch row. */
+export function ToggleRow({ icon, title, subtitle, value, onChange, disabled, color = colors.accent }: {
+  icon?: IconName; title: string; subtitle?: string; value: boolean; onChange: (v: boolean) => void;
+  disabled?: boolean; color?: string;
+}) {
+  return (
+    <Pressable style={s.toggleRow} onPress={() => !disabled && onChange(!value)} accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled: !!disabled }}>
+      {icon ? <Icon name={icon} size={19} color={value ? color : colors.muted} /> : null}
+      <View style={{ flex: 1 }}>
+        <Text style={s.toggleTitle}>{title}</Text>
+        {subtitle ? <Text style={s.toggleSub}>{subtitle}</Text> : null}
+      </View>
+      <Switch value={value} onValueChange={onChange} disabled={disabled}
+        trackColor={{ true: tint(color, 0.5), false: colors.borderMid }} thumbColor={value ? color : colors.white} />
+    </Pressable>
   );
 }
 
@@ -219,8 +269,8 @@ export function Loading({ text }: { text?: string }) {
 
 export function ErrorView({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <EmptyState icon="cloud-offline-outline" title="Couldn't load this" message={message}
-      action={onRetry ? 'Try again' : undefined} onAction={onRetry} />
+    <EmptyState icon="cloud-offline-outline" title={t("Couldn't load this")} message={message}
+      action={onRetry ? t('Try again') : undefined} onAction={onRetry} />
   );
 }
 
@@ -271,6 +321,14 @@ const s = StyleSheet.create({
   emptyTitle: { ...font.h3, textAlign: 'center' },
   emptyMsg: { ...font.small, textAlign: 'center', marginTop: 6, maxWidth: 300 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xxl },
+
+  badge: { position: 'absolute', right: 0, bottom: 0, backgroundColor: colors.green, borderWidth: 2, borderColor: colors.white },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 38, borderRadius: radius.pill,
+    borderWidth: 1.5, borderColor: colors.borderMid, backgroundColor: colors.white },
+  chipText: { fontSize: 13, fontWeight: '700', color: colors.muted, flexShrink: 1 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
+  toggleTitle: { fontSize: 15, fontWeight: '700', color: colors.dark },
+  toggleSub: { fontSize: 12, color: colors.muted, marginTop: 2, lineHeight: 17 },
 
   banner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.md, borderWidth: 1 },
   bannerText: { flex: 1, fontSize: 13, lineHeight: 18 },

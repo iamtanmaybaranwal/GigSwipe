@@ -7,7 +7,9 @@ import { colors, radius, shadow, spacing } from '../../theme';
 import { Avatar, Button, EmptyState, ErrorView, Header, Loading } from '../../components/ui';
 import { STATUS_META } from '../../components/ConversationRow';
 import { RatingSheet } from '../../components/RatingSheet';
-import { formatDate, plural, toast } from '../../utils/format';
+import { formatDate, formatTime, plural, toast } from '../../utils/format';
+import { t } from '../../i18n';
+import { AVAILABILITY_SLOTS } from '../../config';
 import type { RootScreen } from '../../navigation/types';
 
 type Tab = 'all' | 'pending' | 'accepted' | 'hired';
@@ -26,25 +28,25 @@ export default function ApplicantsScreen({ route, navigation }: RootScreen<'Appl
 
   const all = data?.applicants ?? [];
   const list = tab === 'all' ? all : all.filter(a => a.status === tab);
-  const count = (t: Tab) => (t === 'all' ? all.length : all.filter(a => a.status === t).length);
+  const count = (k: Tab) => (k === 'all' ? all.length : all.filter(a => a.status === k).length);
 
   const setStatus = (a: ApplicantWithWorker, status: 'accepted' | 'rejected') => {
-    const name = a.worker?.name ?? 'this applicant';
+    const name = a.worker?.name ?? t('this applicant');
     Alert.alert(
-      status === 'accepted' ? `Accept ${name}?` : `Decline ${name}?`,
+      status === 'accepted' ? t('Accept {name}?', { name }) : t('Decline {name}?', { name }),
       status === 'accepted'
-        ? 'They’ll get a 4-digit hire code to show you when you meet. You can chat to agree details.'
-        : 'Their application will be closed.',
+        ? t('They’ll get a 4-digit hire code to show you when you meet. You can chat to agree details.')
+        : t('Their application will be closed.'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: status === 'accepted' ? 'Accept' : 'Decline', style: status === 'rejected' ? 'destructive' : 'default', onPress: async () => {
+        { text: t('Cancel'), style: 'cancel' },
+        { text: status === 'accepted' ? t('Accept') : t('Decline'), style: status === 'rejected' ? 'destructive' : 'default', onPress: async () => {
           setBusyId(a.id);
           try {
             const { application } = await api.applications.setStatus(a.id, status);
             setData(d => d ? { ...d, applicants: d.applicants.map(x => x.id === a.id ? { ...x, ...application } : x) } : d);
             if (status === 'accepted') navigation.navigate('Chat', { applicationId: a.id });
-            else toast('Application declined');
-          } catch (e) { Alert.alert('Something went wrong', errorMessage(e)); }
+            else toast(t('Application declined'));
+          } catch (e) { Alert.alert(t('Something went wrong'), errorMessage(e)); }
           finally { setBusyId(null); }
         } },
       ]
@@ -53,13 +55,13 @@ export default function ApplicantsScreen({ route, navigation }: RootScreen<'Appl
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <Header title={title ?? 'Applicants'} subtitle={data ? plural(all.length, 'applicant') : undefined} />
+      <Header title={title ?? t('Applicants')} subtitle={data ? plural(all.length, 'applicant') : undefined} />
 
       <View style={s.tabs}>
-        {(['all', 'pending', 'accepted', 'hired'] as Tab[]).map(t => (
-          <Pressable key={t} onPress={() => setTab(t)} style={[s.tab, tab === t && s.tabOn]}>
-            <Text style={[s.tabText, tab === t && s.tabTextOn]}>
-              {t === 'all' ? 'All' : STATUS_META[t].label} {count(t) ? `(${count(t)})` : ''}
+        {(['all', 'pending', 'accepted', 'hired'] as Tab[]).map(k => (
+          <Pressable key={k} onPress={() => setTab(k)} style={[s.tab, tab === k && s.tabOn]}>
+            <Text style={[s.tabText, tab === k && s.tabTextOn]}>
+              {k === 'all' ? t('All') : t(STATUS_META[k].label)} {count(k) ? `(${count(k)})` : ''}
             </Text>
           </Pressable>
         ))}
@@ -72,23 +74,28 @@ export default function ApplicantsScreen({ route, navigation }: RootScreen<'Appl
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.accent]} />}
           contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState icon="people-outline"
-            title={tab === 'all' ? 'No applicants yet' : `No ${STATUS_META[tab as Exclude<Tab, 'all'>].label.toLowerCase()} applicants`}
-            message={tab === 'all' ? 'People who swipe right on this gig will show up here.' : undefined} />}
+            title={tab === 'all' ? t('No applicants yet') : t('No one in "{status}" yet', { status: t(STATUS_META[tab as Exclude<Tab, 'all'>].label) })}
+            message={tab === 'all' ? t('People who swipe right on this gig will show up here.') : undefined} />}
           renderItem={({ item }) => {
             const w = item.worker;
             const meta = STATUS_META[item.status];
             const rated = data?.rated.has(item.id);
+            const slots = (w?.availability ?? []).map(k => AVAILABILITY_SLOTS.find(a => a.key === k)?.label).filter(Boolean) as string[];
             return (
               <View style={s.card}>
                 <Pressable style={s.top} onPress={() => navigation.navigate('UserProfile', { userId: item.workerId })}>
-                  <Avatar name={w?.name} color={w?.avatarColor} size={52} />
+                  <Avatar name={w?.name} color={w?.avatarColor} photo={w?.photoUrl} badge={w?.availableNow} size={52} />
                   <View style={{ flex: 1 }}>
-                    <Text style={s.name}>{w?.name ?? 'Job seeker'}</Text>
+                    <Text style={s.name}>{w?.name ?? t('Job seeker')}</Text>
                     {w?.major || w?.year ? <Text style={s.meta}>{[w?.major, w?.year].filter(Boolean).join(' · ')}</Text> : null}
-                    <Text style={s.applied}>Applied {formatDate(item.createdAt)} · <Text style={{ color: meta.color, fontWeight: '700' }}>{meta.label}</Text></Text>
+                    <Text style={s.applied}>{t('Applied {date}', { date: formatDate(item.createdAt) })} · <Text style={{ color: meta.color, fontWeight: '700' }}>{t(meta.label)}</Text></Text>
                   </View>
                 </Pressable>
+                {w?.availableNow && w.availableUntil ? (
+                  <Text style={s.now}>⚡ {t('Available now, until {time}', { time: formatTime(w.availableUntil) })}</Text>
+                ) : null}
                 {w?.bio ? <Text style={s.bio} numberOfLines={3}>{w.bio}</Text> : null}
+                {slots.length ? <Text style={s.avail} numberOfLines={2}>🗓 {slots.map(l => t(l)).join(', ')}</Text> : null}
                 {(w?.skills?.length ?? 0) > 0 && (
                   <View style={s.skills}>
                     {w!.skills!.slice(0, 6).map(sk => <View key={sk} style={s.skill}><Text style={s.skillText}>{sk}</Text></View>)}
@@ -96,16 +103,16 @@ export default function ApplicantsScreen({ route, navigation }: RootScreen<'Appl
                   </View>
                 )}
                 <View style={s.actions}>
-                  <Button title="Chat" icon="chatbubble-outline" size="sm" variant="outline" style={{ flex: 1 }}
+                  <Button title={t('Chat')} icon="chatbubble-outline" size="sm" variant="outline" style={{ flex: 1 }}
                     onPress={() => navigation.navigate('Chat', { applicationId: item.id })} />
                   {item.status === 'pending' && <>
-                    <Button title="Decline" size="sm" variant="danger" style={{ flex: 1 }} disabled={busyId === item.id} onPress={() => setStatus(item, 'rejected')} />
-                    <Button title="Accept" size="sm" variant="success" style={{ flex: 1 }} loading={busyId === item.id} onPress={() => setStatus(item, 'accepted')} />
+                    <Button title={t('Decline')} size="sm" variant="danger" style={{ flex: 1 }} disabled={busyId === item.id} onPress={() => setStatus(item, 'rejected')} />
+                    <Button title={t('Accept')} size="sm" variant="success" style={{ flex: 1 }} loading={busyId === item.id} onPress={() => setStatus(item, 'accepted')} />
                   </>}
                   {(item.status === 'accepted' || item.status === 'hired') && (
                     rated
-                      ? <View style={[s.ratedBox, { flex: 1 }]}><Text style={s.ratedText}>✓ Rated</Text></View>
-                      : <Button title="Rate" icon="star-outline" size="sm" variant="soft" color={colors.amber} style={{ flex: 1 }} onPress={() => setRating(item)} />
+                      ? <View style={[s.ratedBox, { flex: 1 }]}><Text style={s.ratedText}>✓ {t('Rated')}</Text></View>
+                      : <Button title={t('Rate')} icon="star-outline" size="sm" variant="soft" color={colors.amber} style={{ flex: 1 }} onPress={() => setRating(item)} />
                   )}
                 </View>
               </View>
@@ -123,7 +130,7 @@ export default function ApplicantsScreen({ route, navigation }: RootScreen<'Appl
           const id = rating!.id;
           await api.ratings.submit({ applicationId: id, stars, review: review || undefined });
           setData(d => d ? { ...d, rated: new Set([...d.rated, id]) } : d);
-          toast('Thanks for your review!');
+          toast(t('Thanks for your review!'));
         }}
       />
     </SafeAreaView>
@@ -144,6 +151,8 @@ const s = StyleSheet.create({
   meta: { fontSize: 13, color: colors.body, marginTop: 2 },
   applied: { fontSize: 12, color: colors.subtle, marginTop: 3 },
   bio: { fontSize: 14, color: colors.body, marginTop: 12, lineHeight: 20 },
+  now: { fontSize: 13, color: colors.green, fontWeight: '700', marginTop: 10 },
+  avail: { fontSize: 12, color: colors.body, marginTop: 8 },
   skills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   skill: { backgroundColor: colors.accentLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
   skillText: { fontSize: 12, fontWeight: '700', color: colors.accent },

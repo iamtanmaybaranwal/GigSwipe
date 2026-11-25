@@ -5,35 +5,36 @@ import { colors, font, radius, shadow, tint } from '../../theme';
 import { Button, IconButton } from '../../components/ui';
 import { Icon, type IconName } from '../../components/Icon';
 import type { RootScreen } from '../../navigation/types';
+import { t } from '../../i18n';
 
 export default function RoleScreen({ navigation }: RootScreen<'Role'>) {
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <IconButton name="arrow-back" label="Go back" onPress={() => navigation.goBack()} style={{ marginLeft: -8 }} />
+      <IconButton name="arrow-back" label={t('Go back')} onPress={() => navigation.goBack()} style={{ marginLeft: -8 }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <Text style={font.h1}>How will you use GigSwipe?</Text>
+        <Text style={font.h1}>{t('How will you use GigSwipe?')}</Text>
         <Text style={[font.body, { color: colors.muted, marginTop: 6, marginBottom: 24 }]}>
-          You can always create a second account for the other role.
+          {t('You can always create a second account for the other role.')}
         </Text>
 
         <RoleCard
           icon="person-outline"
-          title="I'm looking for work"
-          tag="Job Seeker"
-          text="Students, part-timers, freelancers, parents, retirees, or anyone between jobs. Swipe local and remote gigs and chat with employers."
+          title={t("I'm looking for work")}
+          tag={t('Job Seeker')}
+          text={t('Students, part-timers, freelancers, parents, retirees, or anyone between jobs. Swipe local and remote gigs and chat with employers.')}
           color={colors.accent}
           onPress={() => navigation.navigate('Register', { role: 'worker' })}
         />
         <RoleCard
           icon="storefront-outline"
-          title="I need to hire"
-          tag="Job Giver"
-          text="Businesses, event organisers, startups, households and individuals. Post a gig in a minute and hire people nearby."
+          title={t('I need to hire')}
+          tag={t('Job Giver')}
+          text={t('Businesses, event organisers, startups, households and individuals. Post a gig in a minute and hire people nearby.')}
           color={colors.navy}
           onPress={() => navigation.navigate('Register', { role: 'business' })}
         />
 
-        <Button title="Already have an account? Sign in" variant="ghost" onPress={() => navigation.navigate('Login')} style={{ marginTop: 8 }} />
+        <Button title={t('Already have an account? Sign in')} variant="ghost" onPress={() => navigation.navigate('Login')} style={{ marginTop: 8 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -52,7 +53,7 @@ function RoleCard({ icon, title, tag, text, color, onPress }: {
         </View>
       </View>
       <Text style={s.cardText}>{text}</Text>
-      <Button title={`Sign up as ${tag}`} color={color} size="md" iconRight="arrow-forward" onPress={onPress} />
+      <Button title={t('Sign up as {role}', { role: tag })} color={color} size="md" iconRight="arrow-forward" onPress={onPress} />
     </View>
   );
 }

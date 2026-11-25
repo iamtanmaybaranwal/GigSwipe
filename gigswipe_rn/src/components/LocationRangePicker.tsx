@@ -5,6 +5,7 @@ import { DEFAULT_RADIUS, RADIUS_OPTIONS } from '../config';
 import { describeLocation, getCurrentCoords, LocationError, requestLocationPermission } from '../services/location';
 import { Icon } from './Icon';
 import { TextField } from './ui';
+import { t } from '../i18n';
 
 export interface LocationValue {
   locationLabel?: string;
@@ -14,7 +15,7 @@ export interface LocationValue {
 }
 
 /** Ask for location permission, read GPS and pick a travel/hiring radius. */
-export function LocationRangePicker({ value, onChange, helperText, rangeLabel = 'Comfortable range' }: {
+export function LocationRangePicker({ value, onChange, helperText, rangeLabel = t('Comfortable range') }: {
   value: LocationValue; onChange: (v: LocationValue) => void; helperText?: string; rangeLabel?: string;
 }) {
   const [locating, setLocating] = useState(false);
@@ -26,13 +27,13 @@ export function LocationRangePicker({ value, onChange, helperText, rangeLabel = 
       const perm = await requestLocationPermission();
       if (perm !== 'granted') {
         Alert.alert(
-          'Location permission needed',
+          t('Location permission needed'),
           perm === 'blocked'
-            ? 'Location access is turned off for GigSwipe. Open Settings → Permissions → Location and choose "Allow while using the app".'
-            : 'GigSwipe uses your location only to match you with nearby gigs and job seekers.',
+            ? t('Location access is turned off for GigSwipe. Open Settings → Permissions → Location and choose "Allow while using the app".')
+            : t('GigSwipe uses your location only to match you with nearby gigs and job seekers.'),
           perm === 'blocked'
-            ? [{ text: 'Cancel', style: 'cancel' }, { text: 'Open Settings', onPress: () => Linking.openSettings() }]
-            : [{ text: 'OK' }]
+            ? [{ text: t('Cancel'), style: 'cancel' }, { text: t('Open Settings'), onPress: () => Linking.openSettings() }]
+            : [{ text: t('OK') }]
         );
         return;
       }
@@ -40,7 +41,7 @@ export function LocationRangePicker({ value, onChange, helperText, rangeLabel = 
       const label = await describeLocation(latitude, longitude);
       onChange({ ...value, latitude, longitude, locationLabel: label, radiusMiles: value.radiusMiles ?? DEFAULT_RADIUS });
     } catch (e) {
-      Alert.alert('Could not get your location', e instanceof LocationError ? e.message : 'Please try again.');
+      Alert.alert(t('Could not get your location'), e instanceof LocationError ? t(e.message) : t('Please try again.'));
     } finally {
       setLocating(false);
     }
@@ -51,9 +52,9 @@ export function LocationRangePicker({ value, onChange, helperText, rangeLabel = 
       <View>
         <Pressable style={s.enable} onPress={locate} disabled={locating} accessibilityRole="button">
           {locating ? <ActivityIndicator color={colors.accent} /> : <Icon name="locate-outline" size={18} color={colors.accent} />}
-          <Text style={s.enableText}>{locating ? 'Finding you…' : 'Use my current location'}</Text>
+          <Text style={s.enableText}>{locating ? t('Finding you…') : t('Use my current location')}</Text>
         </Pressable>
-        <Text style={s.helper}>One-time setup. After this, GigSwipe keeps it up to date while you use the app.</Text>
+        <Text style={s.helper}>{t('One-time setup. After this, GigSwipe keeps it up to date while you use the app.')}</Text>
       </View>
     );
   }
@@ -62,17 +63,17 @@ export function LocationRangePicker({ value, onChange, helperText, rangeLabel = 
     <View>
       <View style={s.current}>
         <Icon name="location" size={16} color={colors.green} />
-        <Text style={s.currentText} numberOfLines={1}>Location set</Text>
+        <Text style={s.currentText} numberOfLines={1}>{t('Location set')}</Text>
         <Pressable onPress={locate} disabled={locating} hitSlop={8}>
-          {locating ? <ActivityIndicator color={colors.accent} size="small" /> : <Text style={s.link}>Update</Text>}
+          {locating ? <ActivityIndicator color={colors.accent} size="small" /> : <Text style={s.link}>{t('Update')}</Text>}
         </Pressable>
       </View>
       <TextField
-        label="Area name (shown to others)"
+        label={t('Area name (shown to others)')}
         icon="map-outline"
         value={value.locationLabel ?? ''}
-        onChangeText={t => onChange({ ...value, locationLabel: t })}
-        placeholder="e.g. Downtown Seattle, WA"
+        onChangeText={v => onChange({ ...value, locationLabel: v })}
+        placeholder={t('e.g. Koramangala, Bengaluru')}
         maxLength={120}
       />
       <Text style={s.rangeLabel}>{rangeLabel}</Text>

@@ -4,12 +4,15 @@ The bare React Native version of GigSwipe (no Expo). It talks to the same backen
 
 - React Native **0.88.1** (New Architecture, Hermes), React 19, TypeScript
 - Navigation: React Navigation 7 (native stack + bottom tabs)
-- Maps: `react-native-maps` (Google Maps)
+- Maps: Leaflet + OpenStreetMap in `react-native-webview` (free, no API key or billing)
 - Location: `@react-native-community/geolocation`
 - Secure session storage: `react-native-keychain` (Android Keystore)
 - Real-time chat: `socket.io-client`
 - Icons: `@react-native-vector-icons/ionicons`
 - Offline detection: `@react-native-community/netinfo`
+- Photos: `react-native-image-picker` (camera + gallery, resized on the phone)
+- Gig reminders + small settings storage: GigSwipe's own Turbo Native Module (`src/specs/NativeGigSwipe.ts` → `android/app/src/main/java/com/gigswipe/app/device/`)
+- Languages: English + Hindi (`src/i18n/`)
 
 ---
 
@@ -42,10 +45,10 @@ Edit `.env`:
 ```env
 API_URL=http://localhost:3001            # debug builds (works over USB, see below)
 API_URL_PRODUCTION=https://api.your-domain.com
-MAPS_API_KEY=                            # Google Maps SDK for Android key
+CURRENCY_SYMBOL=₹                        # shown before pay amounts (same as backend/.env)
 ```
 
-Without `MAPS_API_KEY` the app still works. The map screen shows a list instead.
+The map uses free OpenStreetMap tiles, so there's no key to set up. Before a big launch, point `MAP_TILE_URL` (and `MAP_TILE_ATTRIBUTION`) at a tile provider such as MapTiler. OpenStreetMap's own servers are meant for light use. Directions open the Google Maps app, which is free and needs no key.
 
 ## 3. Run on your phone with USB debugging
 
@@ -102,8 +105,12 @@ Without `keystore.properties`, release builds are signed with the debug key. Tha
 | App shows "Can't reach GigSwipe" | Backend not running, or USB forwarding lost → `npm run reverse` |
 | `Unsupported class file major version` / Gradle JDK errors | `JAVA_HOME` isn't JDK 17. Run `echo $env:JAVA_HOME` |
 | `adb devices` shows `unauthorized` | Unlock the phone and accept the USB debugging prompt |
-| Map is grey / blank | `MAPS_API_KEY` missing or invalid, or "Maps SDK for Android" not enabled for the key |
-| Changed `.env` but nothing happened | `npm run start:clean`, and rebuild (`npm run android`) if you changed `MAPS_API_KEY` |
+| Map is blank / shows a list | The phone has no internet, or the tile server is blocked. Check `MAP_TILE_URL` |
+| Changed `.env` but nothing happened | `npm run start:clean` (Metro caches `.env` values) |
+
+## Translations
+
+All text goes through `t('English text')` from `src/i18n`. The English text is the key, and `src/i18n/hi.ts` maps it to Hindi. A string without a Hindi entry simply shows in English. To add a language, copy `hi.ts` (e.g. to `ta.ts`), translate the values and add it to `LANGUAGES` in `src/i18n/index.ts`. Keep `{placeholders}` exactly as they are (a unit test checks this).
 
 ## Project structure
 
@@ -118,13 +125,15 @@ gigswipe_rn/
     ├── components/            # UI kit, sheets (rating, hire code), location picker
     ├── context/AuthContext    # Session (Keystore-backed), auto sign-out on expiry
     ├── hooks/                 # Focus-aware data loading, socket events, auto location
+    ├── i18n/                  # t() + Hindi dictionary
     ├── navigation/            # Root stack + worker/business tabs
     ├── screens/
     │   ├── auth/              # Welcome, Role, Login, Register
     │   ├── worker/            # Swipe feed, gig detail, map, matches, profile
     │   ├── business/          # Dashboard, post gig, messages, applicants, profile
     │   └── shared/            # Chat, public profile
-    ├── services/              # Socket, location, secure storage
+    ├── services/              # Socket, location, secure storage, photos, reminders, native settings
+    ├── specs/                 # Turbo Native Module spec (codegen)
     ├── theme/                 # Colours, spacing, typography
     └── utils/                 # Formatting, links, directions
 ```

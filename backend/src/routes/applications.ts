@@ -5,8 +5,11 @@ import { ah, HttpError, requireId } from '../utils/http';
 import { serializeApplication, serializePublicUser } from '../utils/serialize';
 import { unreadCountFor } from '../services/chat';
 import { emitToUser } from '../realtime';
+import { applyToGig, recordHire } from '../services/gigs';
 import GigModel from '../models/Gig';
 import UserModel from '../models/User';
+import MessageModel from '../models/Message';
+import InviteModel from '../models/Invite';
 import ApplicationModel, { type IApplication } from '../models/Application';
 
 const router = Router();
@@ -30,6 +33,43 @@ async function withChatMeta(app: IApplication, viewerId: string) {
   };
 }
 
+const iso = (d?: Date | null) => (d ? new Date(d).toISOString() : undefined);
+
+/** The bits of a gig a conversation needs (schedule for reminders, place for directions). */
+function gigSummary(g: any) {
+  if (!g) return { gigRemoved: true };
+  return {
+    gigStartAt:   iso(g.startAt),
+    gigEndAt:     iso(g.endAt),
+    gigLocation:  g.workMode === 'remote' ? 'Remote' : g.location,
+    gigLatitude:  g.geo?.coordinates?.[1],
+    gigLongitude: g.geo?.coordinates?.[0],
+    gigStatus:    g.status ?? 'open',
+  };
+}
+
+/** Applications → conversation rows with the other person's profile and gig schedule. */
+async function buildConversations(apps: IApplication[], userId: string) {
+  const otherIds = apps.map(a => (a.workerId.toString() === userId ? a.businessId : a.workerId));
+  const [others, gigs] = await Promise.all([
+    UserModel.find({ _id: { $in: otherIds } }).lean(),
+    GigModel.find({ _id: { $in: apps.map(a => a.gigId) } }).select('startAt endAt location workMode geo status').lean(),
+  ]);
+  const userById = new Map(others.map(u => [u._id.toString(), u]));
+  const gigById = new Map(gigs.map(g => [g._id.toString(), g]));
+
+  const conversations = await Promise.all(apps.map(async a => {
+    const otherId = a.workerId.toString() === userId ? a.businessId.toString() : a.workerId.toString();
+    return {
+      ...(await withChatMeta(a, userId)),
+      ...gigSummary(gigById.get(a.gigId.toString())),
+      otherUser: serializePublicUser(userById.get(otherId)),
+    };
+  }));
+  conversations.sort((x, y) => new Date(y.lastMessageTime).getTime() - new Date(x.lastMessageTime).getTime());
+  return conversations;
+}
+
 /** Tells both people on an application that it changed, so their screens refresh. */
 function notifyChange(app: IApplication) {
   const payload = { applicationId: String(app._id), status: app.status };
@@ -50,40 +90,20 @@ async function loadOwnApplication(id: string, userId: string) {
 router.post('/', requireAuth, requireRole('worker'), ah(async (req, res) => {
   const userId = req.user!.id;
   const gigId = requireId(req.body?.gigId, 'Gig');
-
   const gig = await GigModel.findById(gigId);
   if (!gig) throw new HttpError(404, 'This gig is no longer available');
 
-  const existing = await ApplicationModel.findOne({ gigId, workerId: userId });
-  if (existing) return res.json({ application: serializeApplication(existing, userId), alreadyApplied: true });
-
-  try {
-    const app = await ApplicationModel.create({
-      gigId:         gig._id,
-      gigTitle:      gig.title,
-      workerId:      userId,
-      businessId:    gig.businessId,
-      businessName:  gig.businessName,
-      businessColor: gig.businessColor,
-      status:        'pending',
-    });
-    emitToUser(gig.businessId.toString(), 'application_update', { applicationId: String(app._id), status: app.status, gigId });
-    res.status(201).json({ application: serializeApplication(app, userId) });
-  } catch (err: any) {
-    // Two quick taps can race past the findOne above — the unique index catches it
-    if (err?.code === 11000) {
-      const app = await ApplicationModel.findOne({ gigId, workerId: userId });
-      return res.json({ application: serializeApplication(app!, userId), alreadyApplied: true });
-    }
-    throw err;
-  }
+  const { app, alreadyApplied } = await applyToGig(userId, gig);
+  // An open invite for this gig is now answered
+  await InviteModel.updateOne({ gigId: gig._id, workerId: userId, status: 'pending' }, { status: 'accepted', applicationId: app._id });
+  res.status(alreadyApplied ? 200 : 201).json({ application: serializeApplication(app, userId), ...(alreadyApplied && { alreadyApplied }) });
 }));
 
 // GET /api/applications/mine — worker's own applications (shown as Matches)
 router.get('/mine', requireAuth, ah(async (req, res) => {
   const userId = req.user!.id;
-  const mine = await ApplicationModel.find({ workerId: userId }).sort({ lastMessageAt: -1, createdAt: -1 });
-  res.json({ applications: await Promise.all(mine.map(a => withChatMeta(a, userId))) });
+  const mine = await ApplicationModel.find({ workerId: userId }).sort({ updatedAt: -1 }).limit(200);
+  res.json({ applications: await buildConversations(mine, userId) });
 }));
 
 // GET /api/applications/inbox — every conversation for the current user (both roles),
@@ -93,16 +113,7 @@ router.get('/inbox', requireAuth, ah(async (req, res) => {
   const apps = await ApplicationModel.find({ $or: [{ workerId: userId }, { businessId: userId }] })
     .sort({ updatedAt: -1 })
     .limit(200);
-  const otherIds = apps.map(a => (a.workerId.toString() === userId ? a.businessId : a.workerId));
-  const others = await UserModel.find({ _id: { $in: otherIds } }).lean();
-  const byId = new Map(others.map(u => [u._id.toString(), u]));
-
-  const conversations = await Promise.all(apps.map(async a => {
-    const otherId = a.workerId.toString() === userId ? a.businessId.toString() : a.workerId.toString();
-    return { ...(await withChatMeta(a, userId)), otherUser: serializePublicUser(byId.get(otherId)) };
-  }));
-  conversations.sort((x, y) => new Date(y.lastMessageTime).getTime() - new Date(x.lastMessageTime).getTime());
-  res.json({ conversations });
+  res.json({ conversations: await buildConversations(apps, userId) });
 }));
 
 // GET /api/applications/gig/:gigId — business views applicants for one of their gigs
@@ -189,14 +200,43 @@ router.get('/work-history', requireAuth, ah(async (req, res) => {
 router.get('/:id', requireAuth, ah(async (req, res) => {
   const userId = req.user!.id;
   const app = await loadOwnApplication(req.params.id, userId);
-  const worker = await UserModel.findById(app.workerId).select('name avatarColor').lean();
+  const [worker, business, gig] = await Promise.all([
+    UserModel.findById(app.workerId).select('name avatarColor photoUrl').lean(),
+    UserModel.findById(app.businessId).select('photoUrl').lean(),
+    GigModel.findById(app.gigId).select('startAt endAt location workMode geo status').lean(),
+  ]);
   res.json({
     application: {
       ...(await withChatMeta(app, userId)),
+      ...gigSummary(gig),
       workerName:  worker?.name ?? 'Job Seeker',
       workerColor: worker?.avatarColor ?? '#ff5864',
+      workerPhotoUrl:   worker?.photoUrl || undefined,
+      businessPhotoUrl: business?.photoUrl || undefined,
     },
   });
+}));
+
+// DELETE /api/applications/:id — job seeker withdraws a pending application
+// (used by "Undo" after a swipe, and "Withdraw" in the chat). Its chat is removed too.
+router.delete('/:id', requireAuth, ah(async (req, res) => {
+  const userId = req.user!.id;
+  const app = await loadOwnApplication(req.params.id, userId);
+  if (app.workerId.toString() !== userId) throw new HttpError(403, 'Only the job seeker can withdraw an application');
+  if (app.status !== 'pending') {
+    throw new HttpError(400, app.status === 'rejected'
+      ? 'This application is already closed.'
+      : 'You have already been accepted, so it cannot be withdrawn. Message the job giver instead.');
+  }
+  await Promise.all([
+    MessageModel.deleteMany({ applicationId: app._id }),
+    InviteModel.updateOne({ applicationId: app._id }, { status: 'pending', $unset: { applicationId: 1 } }),
+  ]);
+  await app.deleteOne();
+  const payload = { applicationId: String(app._id), status: 'withdrawn', gigId: app.gigId.toString() };
+  emitToUser(app.businessId.toString(), 'application_update', payload);
+  emitToUser(app.businessId.toString(), 'inbox_update', { applicationId: String(app._id) });
+  res.json({ success: true });
 }));
 
 // POST /api/applications/:id/hire-request — business generates a fresh code for the worker
@@ -255,6 +295,7 @@ router.post('/:id/verify-hire', requireAuth, ah(async (req, res) => {
   app.hireCode = undefined; app.hireCodeExpiry = undefined; app.hireCodeAttempts = 0;
   await app.save();
   notifyChange(app);
+  await recordHire(app.gigId);
 
   res.json({ message: 'Hire confirmed! Work begins now.', application: serializeApplication(app, userId) });
 }));

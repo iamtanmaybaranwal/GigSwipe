@@ -7,6 +7,7 @@ import { colors, font } from '../../theme';
 import { EmptyState, ErrorView, Loading } from '../../components/ui';
 import { ConversationRow } from '../../components/ConversationRow';
 import { plural } from '../../utils/format';
+import { t } from '../../i18n';
 import type { BusinessTabScreen } from '../../navigation/types';
 
 const Separator = () => <View style={s.sep} />;
@@ -23,8 +24,8 @@ export default function MessagesScreen({ navigation }: BusinessTabScreen<'Messag
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
-        <Text style={font.h1}>Messages</Text>
-        <Text style={font.small}>{list.length ? `${plural(list.length, 'conversation')}${unread ? ` · ${unread} unread` : ''}` : 'Chats with your applicants'}</Text>
+        <Text style={font.h1}>{t('Messages')}</Text>
+        <Text style={font.small}>{list.length ? `${plural(list.length, 'conversation')}${unread ? ` · ${t('{n} unread', { n: unread })}` : ''}` : t('Chats with your applicants')}</Text>
       </View>
       {loading ? <Loading /> : error && !data ? <ErrorView message={error} onRetry={retry} /> : (
         <FlatList
@@ -33,12 +34,14 @@ export default function MessagesScreen({ navigation }: BusinessTabScreen<'Messag
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.accent]} />}
           contentContainerStyle={{ flexGrow: 1 }}
           ItemSeparatorComponent={Separator}
-          ListEmptyComponent={<EmptyState icon="chatbubbles-outline" title="No conversations yet"
-            message="When someone applies to one of your gigs, a chat with them appears here." />}
+          ListEmptyComponent={<EmptyState icon="chatbubbles-outline" title={t('No conversations yet')}
+            message={t('When someone applies to one of your gigs, a chat with them appears here.')} />}
           renderItem={({ item }) => (
             <ConversationRow
-              name={item.otherUser?.name ?? 'Job seeker'}
+              name={item.otherUser?.name ?? t('Job seeker')}
               color={item.otherUser?.avatarColor}
+              photo={item.otherUser?.photoUrl}
+              online={item.otherUser?.availableNow}
               title={item.gigTitle}
               lastMessage={item.lastMessage}
               time={item.lastMessageTime}

@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, Text, V
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme';
 import { IconButton } from './ui';
+import { t } from '../i18n';
 
 export function Sheet({ visible, title, onClose, children }: {
   visible: boolean; title: string; onClose: () => void; children: React.ReactNode;
@@ -12,12 +13,12 @@ export function Sheet({ visible, title, onClose, children }: {
   return (
     <Modal visible={visible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior="padding" style={s.wrap}>
-        <Pressable style={s.backdrop} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable style={s.backdrop} onPress={onClose} accessibilityLabel={t('Close')} />
         <View style={[s.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.sm }]}>
           <View style={s.handle} />
           <View style={s.head}>
             <Text style={s.title}>{title}</Text>
-            <IconButton name="close" label="Close" onPress={onClose} color={colors.muted} />
+            <IconButton name="close" label={t('Close')} onPress={onClose} color={colors.muted} />
           </View>
           <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>{children}</ScrollView>
         </View>

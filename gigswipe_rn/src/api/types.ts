@@ -3,13 +3,19 @@
 export type Role = 'worker' | 'business';
 export type WorkMode = 'onsite' | 'remote';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'hired';
+export type PayUnit = 'hour' | 'day' | 'week' | 'month' | 'fixed';
+export type GigStatus = 'open' | 'filled' | 'closed';
+export type AvailabilitySlot =
+  'weekday_mornings' | 'weekday_afternoons' | 'weekday_evenings' | 'weekends' | 'nights' | 'flexible';
 
 export interface User {
   id: string;
   name: string;
   email?: string; // only present on your own account
+  emailVerified?: boolean;
   role: Role;
   avatarColor?: string;
+  photoUrl?: string; // /api/uploads/<id>
   // Business
   businessName?: string;
   industry?: string;
@@ -22,6 +28,11 @@ export interface User {
   year?: string;       // shown as "Experience"
   skills?: string[];
   sampleWork?: string[];
+  availability?: AvailabilitySlot[];
+  availabilityNote?: string;
+  availableUntil?: string;
+  availableNow?: boolean;
+  discoverable?: boolean;
   // Shared
   bio?: string;
   locationLabel?: string;
@@ -35,7 +46,18 @@ export interface Gig {
   id: string;
   title: string;
   pay: string;
-  hours: string;
+  payAmount?: number;
+  payUnit?: PayUnit;
+  hours: string; // schedule notes
+  startAt?: string;
+  endAt?: string;
+  openings: number;
+  hiredCount: number;
+  spotsLeft: number;
+  status: GigStatus;
+  expired: boolean;
+  photos: string[];
+  businessPhotoUrl?: string;
   description: string;
   category: string;
   workMode: WorkMode;
@@ -48,6 +70,27 @@ export interface Gig {
   latitude?: number;
   longitude?: number;
   distanceMiles?: number;
+}
+
+export interface SavedGig extends Gig {
+  savedAt: string;
+  applied: boolean;
+}
+
+export interface GigViewerState {
+  saved: boolean;
+  applicationId: string | null;
+}
+
+export interface FeedFilters {
+  q?: string;
+  category?: string[];
+  mode?: WorkMode;
+  payUnit?: PayUnit;
+  minPay?: number;
+  from?: string;
+  to?: string;
+  radius?: number;
 }
 
 export interface MyGig extends Gig {
@@ -71,7 +114,17 @@ export interface Application {
   hireCodeExpiry?: string;
 }
 
-export interface ApplicationWithMeta extends Application {
+export interface GigSchedule {
+  gigStartAt?: string;
+  gigEndAt?: string;
+  gigLocation?: string;
+  gigLatitude?: number;
+  gigLongitude?: number;
+  gigStatus?: GigStatus;
+  gigRemoved?: boolean;
+}
+
+export interface ApplicationWithMeta extends Application, GigSchedule {
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
@@ -80,10 +133,42 @@ export interface ApplicationWithMeta extends Application {
 export interface ApplicationDetail extends ApplicationWithMeta {
   workerName: string;
   workerColor: string;
+  workerPhotoUrl?: string;
+  businessPhotoUrl?: string;
 }
 
 export interface Conversation extends ApplicationWithMeta {
   otherUser: User | null;
+}
+
+export interface WorkerResult extends User {
+  distanceMiles?: number;
+  averageStars: number;
+  totalRatings: number;
+  gigsCompleted: number;
+}
+
+export type InviteStatus = 'pending' | 'accepted' | 'declined';
+
+export interface Invite {
+  id: string;
+  gigId: string;
+  businessId: string;
+  workerId: string;
+  message?: string;
+  status: InviteStatus;
+  applicationId?: string;
+  createdAt: string;
+}
+
+export interface InviteWithGig extends Invite {
+  gig: Gig;
+  business: User | null;
+}
+
+export interface InviteOption {
+  gig: Gig;
+  state: 'none' | 'applied' | 'invite_pending' | 'invite_accepted' | 'invite_declined';
 }
 
 export interface ApplicantWithWorker extends Application {
@@ -134,13 +219,21 @@ export interface WorkHistoryItem {
 
 export interface CreateGigBody {
   title: string;
-  pay: string;
-  hours: string;
+  payAmount: number;
+  payUnit: PayUnit;
+  pay?: string;
+  hours?: string;
   description: string;
   category: string;
   workMode: WorkMode;
   location?: string;
+  startAt?: string | null;
+  endAt?: string | null;
+  openings?: number;
+  photos?: string[];
 }
+
+export type UpdateGigBody = Partial<CreateGigBody> & { status?: 'open' | 'closed' };
 
 export interface RegisterBody {
   name: string;
@@ -151,4 +244,8 @@ export interface RegisterBody {
   major?: string;
 }
 
-export type ProfileUpdate = Partial<Omit<User, 'id' | 'email' | 'role' | 'avatarColor' | 'createdAt'>>;
+export type ProfileUpdate = Partial<Omit<User,
+  'id' | 'email' | 'role' | 'avatarColor' | 'createdAt' | 'availableNow' | 'photoUrl' | 'availableUntil'>> & {
+  photoUrl?: string | null;
+  availableUntil?: string | null;
+};

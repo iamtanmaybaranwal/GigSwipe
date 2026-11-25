@@ -5,6 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import { useAutoLocation, useSocketEvent } from '../hooks';
 import { api } from '../api';
+import { t } from '../i18n';
+import { registerReminderRefresher, syncReminders } from '../services/reminders';
 import { colors } from '../theme';
 import { Icon, type IconName } from '../components/Icon';
 import type { BusinessTabParams, RootStackParams, WorkerTabParams } from './types';
@@ -13,11 +15,15 @@ import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RoleScreen from '../screens/auth/RoleScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import FeedScreen from '../screens/worker/FeedScreen';
 import MatchesScreen from '../screens/worker/MatchesScreen';
 import WorkerProfileScreen from '../screens/worker/WorkerProfileScreen';
 import GigDetailScreen from '../screens/worker/GigDetailScreen';
 import GigsMapScreen from '../screens/worker/GigsMapScreen';
+import SavedGigsScreen from '../screens/worker/SavedGigsScreen';
+import FindWorkersScreen from '../screens/business/FindWorkersScreen';
+import GigEditorScreen from '../screens/business/GigEditorScreen';
 import DashboardScreen from '../screens/business/DashboardScreen';
 import PostGigScreen from '../screens/business/PostGigScreen';
 import MessagesScreen from '../screens/business/MessagesScreen';
@@ -46,42 +52,57 @@ const tabScreenOptions = {
   tabBarBadgeStyle: { backgroundColor: colors.accent, fontSize: 10 },
 };
 
-/** Total unread messages, kept live by socket events. */
-function useUnreadCount() {
+/**
+ * Tab badge (unread messages, plus pending invites for job seekers), kept live by
+ * socket events. The same inbox data also keeps the on-device gig reminders current.
+ */
+function useBadgeAndReminders(role: 'worker' | 'business') {
   const [count, setCount] = useState(0);
   const refresh = React.useCallback(() => {
-    api.applications.inbox()
-      .then(({ conversations }) => setCount(conversations.reduce((n, c) => n + (c.unreadCount || 0), 0)))
+    Promise.all([
+      api.applications.inbox(),
+      role === 'worker' ? api.invites.mine().catch(() => ({ invites: [] })) : Promise.resolve({ invites: [] }),
+    ])
+      .then(([{ conversations }, { invites }]) => {
+        setCount(conversations.reduce((n, c) => n + (c.unreadCount || 0), 0) + invites.length);
+        syncReminders(conversations, role).catch(() => {});
+      })
       .catch(() => {});
-  }, []);
-  React.useEffect(() => { refresh(); }, [refresh]);
+  }, [role]);
+  React.useEffect(() => {
+    refresh();
+    registerReminderRefresher(refresh);
+    return () => registerReminderRefresher(null);
+  }, [refresh]);
   useSocketEvent('inbox_update', refresh);
   useSocketEvent('application_update', refresh);
+  useSocketEvent('invite_update', refresh);
   useSocketEvent('connection_change', (up: boolean) => { if (up) refresh(); });
   return { count, refresh };
 }
 
 function WorkerTabs() {
   useAutoLocation();
-  const unread = useUnreadCount();
+  const unread = useBadgeAndReminders('worker');
   return (
     <WorkerTab.Navigator screenOptions={tabScreenOptions} screenListeners={{ focus: unread.refresh }}>
-      <WorkerTab.Screen name="Discover" component={FeedScreen} options={tabOptions('layers-outline', 'layers', 'Discover')} />
-      <WorkerTab.Screen name="Matches" component={MatchesScreen} options={tabOptions('chatbubbles-outline', 'chatbubbles', 'Matches', unread.count)} />
-      <WorkerTab.Screen name="WorkerProfile" component={WorkerProfileScreen} options={tabOptions('person-outline', 'person', 'Profile')} />
+      <WorkerTab.Screen name="Discover" component={FeedScreen} options={tabOptions('layers-outline', 'layers', t('Discover'))} />
+      <WorkerTab.Screen name="Matches" component={MatchesScreen} options={tabOptions('chatbubbles-outline', 'chatbubbles', t('Matches'), unread.count)} />
+      <WorkerTab.Screen name="WorkerProfile" component={WorkerProfileScreen} options={tabOptions('person-outline', 'person', t('Profile'))} />
     </WorkerTab.Navigator>
   );
 }
 
 function BusinessTabs() {
   useAutoLocation();
-  const unread = useUnreadCount();
+  const unread = useBadgeAndReminders('business');
   return (
     <BusinessTab.Navigator screenOptions={tabScreenOptions} screenListeners={{ focus: unread.refresh }}>
-      <BusinessTab.Screen name="Dashboard" component={DashboardScreen} options={tabOptions('briefcase-outline', 'briefcase', 'My Gigs')} />
-      <BusinessTab.Screen name="PostGig" component={PostGigScreen} options={tabOptions('add-circle-outline', 'add-circle', 'Post Gig')} />
-      <BusinessTab.Screen name="Messages" component={MessagesScreen} options={tabOptions('chatbubbles-outline', 'chatbubbles', 'Messages', unread.count)} />
-      <BusinessTab.Screen name="BusinessProfile" component={BusinessProfileScreen} options={tabOptions('storefront-outline', 'storefront', 'Profile')} />
+      <BusinessTab.Screen name="Dashboard" component={DashboardScreen} options={tabOptions('briefcase-outline', 'briefcase', t('My Gigs'))} />
+      <BusinessTab.Screen name="PostGig" component={PostGigScreen} options={tabOptions('add-circle-outline', 'add-circle', t('Post Gig'))} />
+      <BusinessTab.Screen name="FindWorkers" component={FindWorkersScreen} options={tabOptions('search-outline', 'search', t('Find people'))} />
+      <BusinessTab.Screen name="Messages" component={MessagesScreen} options={tabOptions('chatbubbles-outline', 'chatbubbles', t('Messages'), unread.count)} />
+      <BusinessTab.Screen name="BusinessProfile" component={BusinessProfileScreen} options={tabOptions('storefront-outline', 'storefront', t('Profile'))} />
     </BusinessTab.Navigator>
   );
 }
@@ -107,6 +128,7 @@ export default function RootNavigator() {
           <Stack.Screen name="Role" component={RoleScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         </Stack.Group>
       ) : (
         <Stack.Group>
@@ -115,6 +137,8 @@ export default function RootNavigator() {
             : <Stack.Screen name="BusinessTabs" component={BusinessTabs} />}
           <Stack.Screen name="GigDetail" component={GigDetailScreen} />
           <Stack.Screen name="GigsMap" component={GigsMapScreen} />
+          <Stack.Screen name="SavedGigs" component={SavedGigsScreen} />
+          <Stack.Screen name="GigEditor" component={GigEditorScreen} />
           <Stack.Screen name="Applicants" component={ApplicantsScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="UserProfile" component={UserProfileScreen} />

@@ -16,6 +16,10 @@ import chatRoutes from './routes/chat';
 import ratingRoutes from './routes/ratings';
 import userRoutes from './routes/users';
 import geoRoutes from './routes/geo';
+import savedRoutes from './routes/saved';
+import inviteRoutes from './routes/invites';
+import uploadRoutes from './routes/uploads';
+import appVersionRoutes, { requireSupportedApp } from './routes/appVersion';
 import UserModel from './models/User';
 import GigModel from './models/Gig';
 import ApplicationModel from './models/Application';
@@ -42,7 +46,6 @@ if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PRO
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors());
-app.use(express.json({ limit: '100kb' }));
 
 // Basic abuse protection: a general limit for the whole API, and a much
 // stricter one for login/register to slow down password guessing.
@@ -56,6 +59,19 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
+app.use('/api/auth/email', authLimiter);
+
+// Version check is always reachable; every other API call from an app version
+// below the minimum gets 426 "update required" (see routes/appVersion.ts).
+app.use('/api/app', appVersionRoutes);
+app.use('/api', requireSupportedApp);
+
+// Photo uploads get their own, larger body limit. Mounted before the general
+// JSON parser, which then skips these requests because they're already parsed.
+app.use('/api/uploads', express.json({ limit: '5mb' }), uploadRoutes);
+app.use(express.json({ limit: '100kb' }));
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
@@ -87,6 +103,8 @@ app.use('/api/chat',         chatRoutes);
 app.use('/api/ratings',      ratingRoutes);
 app.use('/api/users',        userRoutes);
 app.use('/api/geo',          geoRoutes);
+app.use('/api/saved',        savedRoutes);
+app.use('/api/invites',      inviteRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);
@@ -95,6 +113,8 @@ app.use(errorHandler);
 async function start() {
   try {
     await connectDB(); // Mongoose builds the schema indexes (geo, unique, lookup) automatically
+    await backfillUserGeo();
+    await backfillGigFields();
 
     const PORT = Number(process.env.PORT ?? 3001);
     httpServer.listen(PORT, '0.0.0.0', () => {
@@ -109,6 +129,26 @@ async function start() {
   }
 }
 
+/** Users saved before worker search existed have lat/lng but no GeoJSON point yet. */
+async function backfillUserGeo() {
+  const users = await UserModel.find({ latitude: { $ne: null }, longitude: { $ne: null }, geo: { $exists: false } })
+    .select('latitude longitude').lean();
+  if (!users.length) return;
+  await UserModel.bulkWrite(users.map(u => ({
+    updateOne: { filter: { _id: u._id }, update: { $set: { geo: { type: 'Point', coordinates: [u.longitude!, u.latitude!] } } } },
+  })));
+  console.log(`[startup] Added map coordinates to ${users.length} existing profile(s).`);
+}
+
+/** Gigs posted before openings / status existed: treat them as open, 1 person needed. */
+async function backfillGigFields() {
+  const r = await GigModel.updateMany(
+    { status: { $exists: false } },
+    { $set: { status: 'open', openings: 1, hiredCount: 0, photos: [] } }
+  );
+  if (r.modifiedCount) console.log(`[startup] Updated ${r.modifiedCount} older gig(s) with status/openings.`);
+}
+
 function shutdown(signal: string) {
   console.log(`[shutdown] ${signal} received — closing connections…`);
   httpServer.close(() => {
@@ -121,5 +161,7 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('unhandledRejection', err => console.error('[unhandledRejection]', err));
 
 if (require.main === module) start();
+
+export { backfillGigFields, backfillUserGeo };
 
 export { app, httpServer };

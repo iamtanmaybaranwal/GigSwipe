@@ -12,6 +12,7 @@ export type WorkerTabParams = {
 export type BusinessTabParams = {
   Dashboard: undefined;
   PostGig: undefined;
+  FindWorkers: undefined;
   Messages: undefined;
   BusinessProfile: undefined;
 };
@@ -22,11 +23,14 @@ export type RootStackParams = {
   Role: undefined;
   Login: undefined;
   Register: { role: Role };
+  ForgotPassword: { email?: string } | undefined;
   // Signed in
   WorkerTabs: NavigatorScreenParams<WorkerTabParams> | undefined;
   BusinessTabs: NavigatorScreenParams<BusinessTabParams> | undefined;
   GigDetail: { gigId: string };
   GigsMap: undefined;
+  SavedGigs: undefined;
+  GigEditor: { gigId: string; mode: 'edit' | 'duplicate' };
   Applicants: { gigId: string; title?: string };
   Chat: { applicationId: string };
   UserProfile: { userId: string };

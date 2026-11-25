@@ -7,6 +7,7 @@ import { colors, font, radius } from '../../theme';
 import { Banner, Button, IconButton, TextField } from '../../components/ui';
 import { isValidEmail } from '../../utils/format';
 import type { RootScreen } from '../../navigation/types';
+import { t } from '../../i18n';
 
 export default function LoginScreen({ navigation }: RootScreen<'Login'>) {
   const { signIn } = useAuth();
@@ -33,30 +34,32 @@ export default function LoginScreen({ navigation }: RootScreen<'Login'>) {
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <IconButton name="arrow-back" label="Go back" onPress={() => navigation.goBack()} style={{ marginLeft: 8 }} />
+      <IconButton name="arrow-back" label={t('Go back')} onPress={() => navigation.goBack()} style={{ marginLeft: 8 }} />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={s.logo}><Text style={s.logoG}>G</Text></View>
-          <Text style={font.h1}>Welcome back</Text>
-          <Text style={[font.body, { color: colors.muted, marginTop: 4, marginBottom: 28 }]}>Sign in to your GigSwipe account</Text>
+          <Text style={font.h1}>{t('Welcome back')}</Text>
+          <Text style={[font.body, { color: colors.muted, marginTop: 4, marginBottom: 28 }]}>{t('Sign in to your GigSwipe account')}</Text>
 
           <TextField
-            label="Email address" icon="mail-outline" value={email} onChangeText={t => { setEmail(t); setError(''); }}
-            placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" autoComplete="email"
+            label={t('Email address')} icon="mail-outline" value={email} onChangeText={v => { setEmail(v); setError(''); }}
+            placeholder={t('you@email.com')} keyboardType="email-address" autoCapitalize="none" autoComplete="email"
             textContentType="emailAddress" returnKeyType="next" onSubmitEditing={() => pwdRef.current?.focus()}
-            error={email.length > 3 && !isValidEmail(email) ? 'Enter a valid email address' : null}
+            error={email.length > 3 && !isValidEmail(email) ? t('Enter a valid email address') : null}
           />
           <TextField
             ref={pwdRef}
-            label="Password" icon="lock-closed-outline" value={password} onChangeText={t => { setPassword(t); setError(''); }}
-            placeholder="Your password" secure autoCapitalize="none" autoComplete="password"
+            label={t('Password')} icon="lock-closed-outline" value={password} onChangeText={v => { setPassword(v); setError(''); }}
+            placeholder={t('Your password')} secure autoCapitalize="none" autoComplete="password"
             returnKeyType="go" onSubmitEditing={submit}
           />
+          <Text style={s.forgot} onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() || undefined })}
+            accessibilityRole="link">{t('Forgot password?')}</Text>
 
           {error ? <Banner icon="alert-circle-outline" text={error} color={colors.red} /> : null}
 
-          <Button title="Sign in" iconRight="arrow-forward" onPress={submit} loading={busy} disabled={!canSubmit} style={{ marginTop: 16 }} />
-          <Button title="New here? Create an account" variant="ghost" onPress={() => navigation.navigate('Role')} style={{ marginTop: 8 }} />
+          <Button title={t('Sign in')} iconRight="arrow-forward" onPress={submit} loading={busy} disabled={!canSubmit} style={{ marginTop: 16 }} />
+          <Button title={t('New here? Create an account')} variant="ghost" onPress={() => navigation.navigate('Role')} style={{ marginTop: 8 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -64,6 +67,7 @@ export default function LoginScreen({ navigation }: RootScreen<'Login'>) {
 }
 
 const s = StyleSheet.create({
+  forgot: { alignSelf: 'flex-end', fontSize: 14, fontWeight: '700', color: colors.accent, paddingVertical: 6, marginBottom: 4 },
   safe: { flex: 1, backgroundColor: colors.white },
   body: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 },
   logo: { width: 60, height: 60, borderRadius: radius.lg, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },

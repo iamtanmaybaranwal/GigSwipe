@@ -5,6 +5,8 @@ import { api, errorMessage, type User } from '../../api';
 import { useAuth, useCurrentUser } from '../../context/AuthContext';
 import { useFocusData } from '../../hooks';
 import { INDUSTRIES } from '../../config';
+import { t } from '../../i18n';
+import { pickAndUploadPhoto } from '../../services/photos';
 import { colors, radius, spacing } from '../../theme';
 import { Avatar, Banner, Card, SectionTitle, TextField } from '../../components/ui';
 import { Icon } from '../../components/Icon';
@@ -12,7 +14,7 @@ import { ProfileHeader, RatingsCard } from '../../components/Profile';
 import { AccountCard, SaveBar } from '../../components/ProfileForm';
 import { LocationRangePicker, type LocationValue } from '../../components/LocationRangePicker';
 import { Sheet } from '../../components/Sheet';
-import { plural, toast } from '../../utils/format';
+import { payText, plural, toast } from '../../utils/format';
 
 type Form = {
   name: string; businessName: string; industry: string; location: string; website: string; phone: string; bio: string; loc: LocationValue;
@@ -31,6 +33,22 @@ export default function BusinessProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [industryOpen, setIndustryOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const changePhoto = async () => {
+    setUploading(true);
+    try {
+      const url = await pickAndUploadPhoto({ allowRemove: !!user.photoUrl });
+      if (url === undefined) return;
+      const { user: updated } = await api.auth.updateProfile({ photoUrl: url });
+      setUser(updated);
+      toast(url ? t('Profile photo updated') : t('Profile photo removed'));
+    } catch (e) {
+      toast(errorMessage(e));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
   const incoming = useMemo(() => fromUser(user), [user]);
@@ -49,7 +67,7 @@ export default function BusinessProfileScreen() {
   }, [user.id]);
 
   const save = useCallback(async () => {
-    if (!form.name.trim()) { setError('Your name cannot be empty.'); return; }
+    if (!form.name.trim()) { setError(t('Your name cannot be empty.')); return; }
     setSaving(true);
     try {
       const { user: updated } = await api.auth.updateProfile({
@@ -61,7 +79,7 @@ export default function BusinessProfileScreen() {
       setForm(fromUser(updated));
       setBaseline(fromUser(updated));
       setUser(updated);
-      toast('Profile saved');
+      toast(t('Profile saved'));
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -80,72 +98,75 @@ export default function BusinessProfileScreen() {
           <ProfileHeader
             name={displayName}
             color={user.avatarColor}
-            subtitle={form.industry || 'Add your industry below'}
+            photo={user.photoUrl}
+            onEditPhoto={changePhoto}
+            uploading={uploading}
+            subtitle={form.industry ? t(form.industry) : t('Add your industry below')}
             tags={form.location || form.loc.locationLabel ? [{ icon: 'location-outline', text: form.location || form.loc.locationLabel! }] : []}
             stats={[
-              { value: total ? `${avg.toFixed(1)}★` : '—', label: 'Rating' },
-              { value: String(data?.history.length ?? 0), label: 'Gigs posted' },
-              { value: String(data?.workersHired ?? 0), label: 'Hired' },
+              { value: total ? `${avg.toFixed(1)}★` : '—', label: t('Rating') },
+              { value: String(data?.history.length ?? 0), label: t('Gigs posted') },
+              { value: String(data?.workersHired ?? 0), label: t('Hired') },
             ]}
           />
 
           {form.loc.latitude == null && (
             <View style={{ marginHorizontal: spacing.lg, marginTop: spacing.lg }}>
-              <Banner icon="locate-outline" color={colors.accent} text="Set your hiring location below so your on-site gigs reach people nearby." />
+              <Banner icon="locate-outline" color={colors.accent} text={t('Set your hiring location below so your on-site gigs reach people nearby.')} />
             </View>
           )}
 
           <Card style={s.card}>
-            <SectionTitle icon="storefront-outline" title="Business" style={{ marginTop: 0 }} />
-            <TextField label="Your name" icon="person-outline" value={form.name} onChangeText={v => set('name', v)} maxLength={80} />
-            <TextField label="Business name" icon="storefront-outline" value={form.businessName} onChangeText={v => set('businessName', v)}
-              placeholder="Leave empty if you hire as an individual" maxLength={100} />
-            <Text style={s.label}>Industry</Text>
+            <SectionTitle icon="storefront-outline" title={t('Business')} style={{ marginTop: 0 }} />
+            <TextField label={t('Your name')} icon="person-outline" value={form.name} onChangeText={v => set('name', v)} maxLength={80} />
+            <TextField label={t('Business name')} icon="storefront-outline" value={form.businessName} onChangeText={v => set('businessName', v)}
+              placeholder={t('Leave empty if you hire as an individual')} maxLength={100} />
+            <Text style={s.label}>{t('Industry')}</Text>
             <Pressable style={s.select} onPress={() => setIndustryOpen(true)} accessibilityRole="button">
               <Icon name="briefcase-outline" size={18} color={colors.muted} />
-              <Text style={[s.selectText, !form.industry && { color: colors.placeholder }]}>{form.industry || 'Choose an industry'}</Text>
+              <Text style={[s.selectText, !form.industry && { color: colors.placeholder }]}>{form.industry ? t(form.industry) : t('Choose an industry')}</Text>
               <Icon name="chevron-down" size={18} color={colors.muted} />
             </Pressable>
-            <TextField label="Address (shown on your profile)" icon="location-outline" value={form.location} onChangeText={v => set('location', v)}
-              placeholder="e.g. 12 Main St, Seattle, WA" maxLength={120} />
-            <TextField label="Website" icon="globe-outline" value={form.website} onChangeText={v => set('website', v)}
+            <TextField label={t('Address (shown on your profile)')} icon="location-outline" value={form.location} onChangeText={v => set('location', v)}
+              placeholder={t('e.g. 12 MG Road, Bengaluru')} maxLength={120} />
+            <TextField label={t('Website')} icon="globe-outline" value={form.website} onChangeText={v => set('website', v)}
               placeholder="mybusiness.com" autoCapitalize="none" keyboardType="url" maxLength={200} />
-            <TextField label="Phone (optional, public)" icon="call-outline" value={form.phone} onChangeText={v => set('phone', v)}
-              placeholder="+1 555 000 0000" keyboardType="phone-pad" maxLength={30} />
-            <TextField label="About" icon="document-text-outline" value={form.bio} onChangeText={v => set('bio', v)} multiline maxLength={1000}
-              placeholder="What you do, what it's like to work with you, and any perks (meals, tips, flexible hours)…" />
+            <TextField label={t('Phone (optional, public)')} icon="call-outline" value={form.phone} onChangeText={v => set('phone', v)}
+              placeholder="+91 98765 43210" keyboardType="phone-pad" maxLength={30} />
+            <TextField label={t('About')} icon="document-text-outline" value={form.bio} onChangeText={v => set('bio', v)} multiline maxLength={1000}
+              placeholder={t("What you do, what it's like to work with you, and any perks (meals, tips, flexible hours)…")} />
           </Card>
 
           <Card style={s.card}>
-            <SectionTitle icon="navigate-outline" title="Hiring location" style={{ marginTop: 0 }} />
-            <LocationRangePicker value={form.loc} onChange={v => set('loc', v)} rangeLabel="Hiring range"
-              helperText="New on-site gigs use this location, so nearby job seekers see them first." />
+            <SectionTitle icon="navigate-outline" title={t('Hiring location')} style={{ marginTop: 0 }} />
+            <LocationRangePicker value={form.loc} onChange={v => set('loc', v)} rangeLabel={t('Hiring range')}
+              helperText={t('New on-site gigs use this location, so nearby job seekers see them first.')} />
           </Card>
 
           {error ? <View style={{ marginHorizontal: spacing.lg, marginTop: spacing.md }}><Banner icon="alert-circle-outline" color={colors.red} text={error} /></View> : null}
 
-          <RatingsCard title="Reviews from job seekers" average={avg} total={total} ratings={data?.ratings ?? []}
-            emptyText="No reviews yet. Accept and hire job seekers to start building your reputation." />
+          <RatingsCard title={t('Reviews from job seekers')} average={avg} total={total} ratings={data?.ratings ?? []}
+            emptyText={t('No reviews yet. Accept and hire job seekers to start building your reputation.')} />
 
           {(data?.history.length ?? 0) > 0 && (
             <Card style={s.card}>
-              <SectionTitle icon="time-outline" title={`Gig history · ${plural(data!.history.length, 'gig')}`} style={{ marginTop: 0 }} />
+              <SectionTitle icon="time-outline" title={t('Gig history · {gigs}', { gigs: plural(data!.history.length, 'gig') })} style={{ marginTop: 0 }} />
               {data!.history.map(h => (
                 <View key={h.gig.id} style={s.hRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={s.hTitle}>{h.gig.title}</Text>
-                    <Text style={s.hSub}>{h.gig.category} · {h.gig.pay}</Text>
+                    <Text style={s.hSub}>{t(h.gig.category)} · {payText(h.gig)}</Text>
                   </View>
                   {h.totalWorkers ? (
                     <View style={s.avatars}>
                       {h.hiredWorkers.slice(0, 3).map((w, i) => (
                         <View key={w.id} style={{ marginLeft: i ? -10 : 0, borderWidth: 2, borderColor: colors.white, borderRadius: 18 }}>
-                          <Avatar name={w.name} color={w.avatarColor} size={30} />
+                          <Avatar name={w.name} color={w.avatarColor} photo={w.photoUrl} size={30} />
                         </View>
                       ))}
-                      <Text style={s.hCount}>{h.totalWorkers} hired</Text>
+                      <Text style={s.hCount}>{t('{n} hired', { n: h.totalWorkers })}</Text>
                     </View>
-                  ) : <Text style={s.hNone}>No hires yet</Text>}
+                  ) : <Text style={s.hNone}>{t('No hires yet')}</Text>}
                 </View>
               ))}
             </Card>
@@ -156,10 +177,10 @@ export default function BusinessProfileScreen() {
         <SaveBar dirty={dirty} saving={saving} onSave={save} onDiscard={() => { setForm(baseline); setError(''); }} />
       </KeyboardAvoidingView>
 
-      <Sheet visible={industryOpen} title="Industry" onClose={() => setIndustryOpen(false)}>
+      <Sheet visible={industryOpen} title={t('Industry')} onClose={() => setIndustryOpen(false)}>
         {INDUSTRIES.map(ind => (
           <Pressable key={ind} style={s.option} onPress={() => { set('industry', ind); setIndustryOpen(false); }}>
-            <Text style={[s.optionText, form.industry === ind && { color: colors.accent, fontWeight: '800' }]}>{ind}</Text>
+            <Text style={[s.optionText, form.industry === ind && { color: colors.accent, fontWeight: '800' }]}>{t(ind)}</Text>
             {form.industry === ind ? <Icon name="checkmark" size={18} color={colors.accent} /> : null}
           </Pressable>
         ))}

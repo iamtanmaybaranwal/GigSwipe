@@ -3,8 +3,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ApplicationStatus } from '../api/types';
 import { colors, tint } from '../theme';
 import { listTime } from '../utils/format';
+import { t } from '../i18n';
 import { Avatar } from './ui';
 
+/** Labels are English keys: show them with t(meta.label). */
 export const STATUS_META: Record<ApplicationStatus, { label: string; color: string }> = {
   pending: { label: 'Applied', color: colors.amber },
   accepted: { label: 'Accepted', color: colors.blue },
@@ -12,8 +14,8 @@ export const STATUS_META: Record<ApplicationStatus, { label: string; color: stri
   rejected: { label: 'Closed', color: colors.subtle },
 };
 
-export function ConversationRow({ name, color, title, lastMessage, time, unread, status, onPress, onAvatarPress, right }: {
-  name: string; color?: string; title: string; lastMessage: string; time: string; unread: number;
+export function ConversationRow({ name, color, photo, online, title, lastMessage, time, unread, status, onPress, onAvatarPress, right }: {
+  name: string; color?: string; photo?: string; online?: boolean; title: string; lastMessage: string; time: string; unread: number;
   status: ApplicationStatus; onPress: () => void; onAvatarPress?: () => void; right?: React.ReactNode;
 }) {
   const meta = STATUS_META[status];
@@ -21,7 +23,7 @@ export function ConversationRow({ name, color, title, lastMessage, time, unread,
   return (
     <Pressable onPress={onPress} android_ripple={{ color: colors.surfaceAlt }} style={s.row}>
       <Pressable onPress={onAvatarPress} disabled={!onAvatarPress} hitSlop={4}>
-        <Avatar name={name} color={color} size={52} />
+        <Avatar name={name} color={color} photo={photo} badge={online} size={52} />
       </Pressable>
       <View style={s.body}>
         <View style={s.line}>
@@ -31,12 +33,12 @@ export function ConversationRow({ name, color, title, lastMessage, time, unread,
         <View style={s.line}>
           <Text style={s.gig} numberOfLines={1}>{title}</Text>
           <View style={[s.status, { backgroundColor: tint(meta.color, 0.12) }]}>
-            <Text style={[s.statusText, { color: meta.color }]}>{meta.label}</Text>
+            <Text style={[s.statusText, { color: meta.color }]}>{t(meta.label)}</Text>
           </View>
         </View>
         <View style={s.line}>
           <Text style={[s.msg, noMsg && s.msgEmpty, unread > 0 && s.msgUnread]} numberOfLines={1}>
-            {noMsg ? 'No messages yet — say hi!' : lastMessage}
+            {noMsg ? t('No messages yet. Say hi!') : lastMessage}
           </Text>
           {unread > 0 ? <View style={s.badge}><Text style={s.badgeText}>{unread > 99 ? '99+' : unread}</Text></View> : right}
         </View>

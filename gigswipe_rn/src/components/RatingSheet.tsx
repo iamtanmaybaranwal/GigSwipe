@@ -5,6 +5,7 @@ import { errorMessage } from '../api';
 import { Sheet } from './Sheet';
 import { Stars } from './Stars';
 import { Button, TextField } from './ui';
+import { t } from '../i18n';
 
 const LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
@@ -23,7 +24,7 @@ export function RatingSheet({ visible, targetName, gigTitle, onClose, onSubmit }
   }, [visible]);
 
   const submit = async () => {
-    if (!stars) { setError('Tap a star to choose a rating.'); return; }
+    if (!stars) { setError(t('Tap a star to choose a rating.')); return; }
     setBusy(true); setError('');
     try {
       await onSubmit(stars, review.trim());
@@ -36,23 +37,23 @@ export function RatingSheet({ visible, targetName, gigTitle, onClose, onSubmit }
   };
 
   return (
-    <Sheet visible={visible} title="Leave a review" onClose={onClose}>
+    <Sheet visible={visible} title={t('Leave a review')} onClose={onClose}>
       <Text style={s.who}>{targetName}</Text>
       <Text style={s.gig}>for “{gigTitle}”</Text>
       <View style={s.stars}>
         <Stars value={stars} size={38} gap={8} onChange={v => { setStars(v); setError(''); }} />
-        <Text style={s.starLabel}>{LABELS[stars] || 'Tap to rate'}</Text>
+        <Text style={s.starLabel}>{stars ? t(LABELS[stars]!) : t('Tap to rate')}</Text>
       </View>
       <TextField
-        label="Review (optional)"
+        label={t('Review (optional)')}
         value={review}
         onChangeText={setReview}
-        placeholder="What was it like working together?"
+        placeholder={t('What was it like working together?')}
         multiline
         maxLength={500}
       />
       {error ? <Text style={s.error}>{error}</Text> : null}
-      <Button title="Submit review" icon="star" onPress={submit} loading={busy} style={{ marginTop: spacing.sm }} />
+      <Button title={t('Submit review')} icon="star" onPress={submit} loading={busy} style={{ marginTop: spacing.sm }} />
     </Sheet>
   );
 }

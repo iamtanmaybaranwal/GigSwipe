@@ -7,6 +7,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api, setAuthToken, setUnauthorizedHandler, ApiError, type User } from '../api';
 import { clearSession, loadSession, saveCachedUser, saveSession } from '../services/secureStorage';
 import { connectSocket, disconnectSocket } from '../services/socket';
+import { clearReminders } from '../services/reminders';
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
 
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signingOut.current = true;
     try {
       disconnectSocket();
+      clearReminders();
       setAuthToken(null);
       await clearSession();
       setUserState(null);

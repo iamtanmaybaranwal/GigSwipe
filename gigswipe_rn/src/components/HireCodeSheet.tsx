@@ -5,6 +5,7 @@ import { errorMessage } from '../api';
 import { Sheet } from './Sheet';
 import { Button } from './ui';
 import { Icon } from './Icon';
+import { t } from '../i18n';
 
 /** Business enters the 4-digit code the job seeker shows them in person. */
 export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit }: {
@@ -19,13 +20,13 @@ export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit
   useEffect(() => {
     if (visible) {
       setCode(''); setError('');
-      const t = setTimeout(() => input.current?.focus(), 350);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => input.current?.focus(), 350);
+      return () => clearTimeout(timer);
     }
   }, [visible]);
 
   const submit = async () => {
-    if (!/^\d{4}$/.test(code)) { setError('Enter all 4 digits.'); return; }
+    if (!/^\d{4}$/.test(code)) { setError(t('Enter all 4 digits.')); return; }
     setBusy(true); setError('');
     try {
       await onSubmit(code);
@@ -39,7 +40,7 @@ export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit
   };
 
   return (
-    <Sheet visible={visible} title="Confirm the hire" onClose={onClose}>
+    <Sheet visible={visible} title={t('Confirm the hire')} onClose={onClose}>
       <View style={s.info}>
         <Icon name="shield-checkmark-outline" size={20} color={colors.accent} />
         <Text style={s.infoText}>
@@ -48,7 +49,7 @@ export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit
         </Text>
       </View>
 
-      <Pressable onPress={() => input.current?.focus()} style={s.boxes} accessibilityLabel="Hire code input">
+      <Pressable onPress={() => input.current?.focus()} style={s.boxes} accessibilityLabel={t('Hire code input')}>
         {[0, 1, 2, 3].map(i => (
           <View key={i} style={[s.box, code.length === i && s.boxActive, !!error && s.boxError]}>
             <Text style={s.digit}>{code[i] ?? ''}</Text>
@@ -57,7 +58,7 @@ export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit
         <TextInput
           ref={input}
           value={code}
-          onChangeText={t => { setCode(t.replace(/\D/g, '').slice(0, 4)); setError(''); }}
+          onChangeText={v => { setCode(v.replace(/\D/g, '').slice(0, 4)); setError(''); }}
           keyboardType="number-pad"
           maxLength={4}
           style={s.hidden}
@@ -69,7 +70,7 @@ export function HireCodeSheet({ visible, workerName, gigTitle, onClose, onSubmit
       </Pressable>
 
       {error ? <Text style={s.error}>{error}</Text> : null}
-      <Button title="Confirm hire" icon="checkmark-circle-outline" variant="success" onPress={submit} loading={busy}
+      <Button title={t('Confirm hire')} icon="checkmark-circle-outline" variant="success" onPress={submit} loading={busy}
         disabled={code.length !== 4} style={{ marginTop: spacing.lg }} />
     </Sheet>
   );

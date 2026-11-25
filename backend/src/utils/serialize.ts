@@ -16,16 +16,28 @@ export function serializeSelf(u: any) {
   delete out._id;
   delete out.__v;
   delete out.passwordHash;
+  delete out.geo;
   out.createdAt = iso(o.createdAt);
   out.updatedAt = iso(o.updatedAt);
+  out.availableUntil = iso(o.availableUntil);
+  out.emailVerified = !!o.emailVerified;
+  out.availableNow = !!o.availableUntil && new Date(o.availableUntil) > new Date();
+  if (out.discoverable === undefined && o.role === 'worker') out.discoverable = true;
   return out;
 }
 
-/** Someone else's profile: same as self but without email. */
+/**
+ * Someone else's profile: same as self but without email or exact home
+ * coordinates (a distance is added by the routes that need one).
+ */
 export function serializePublicUser(u: any) {
   const out = serializeSelf(u);
   if (!out) return null;
   delete out.email;
+  delete out.latitude;
+  delete out.longitude;
+  delete out.radiusMiles;
+  delete out.discoverable;
   return out;
 }
 
