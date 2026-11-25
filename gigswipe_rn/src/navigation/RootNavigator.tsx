@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
@@ -47,8 +47,9 @@ const tabScreenOptions = {
   headerShown: false,
   tabBarActiveTintColor: colors.accent,
   tabBarInactiveTintColor: colors.subtle,
-  tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.borderMid },
-  tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const },
+  // Browsers need a little more room than phones for icon + label
+  tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.borderMid, ...(Platform.OS === 'web' && { height: 64, paddingBottom: 8, paddingTop: 6 }) },
+  tabBarLabelStyle: { fontSize: 11, lineHeight: 15, fontWeight: '600' as const, ...(Platform.OS === 'web' && { flexShrink: 0 }) },
   tabBarBadgeStyle: { backgroundColor: colors.accent, fontSize: 10 },
 };
 

@@ -62,7 +62,9 @@ export default router;
 /** Blocks API calls from app versions older than the minimum (HTTP 426). */
 export function requireSupportedApp(req: Request, res: Response, next: NextFunction) {
   const version = req.get('x-app-version');
-  if (!version || !VERSION_RE.test(version)) return next(); // tools, tests, the website
+  if (!version || !VERSION_RE.test(version)) return next(); // tools, tests
+  // The web app (PWA) is always served fresh from the website, so it's never "too old"
+  if (String(req.get('x-app-platform')).toLowerCase() === 'web') return next();
   const policy = versionPolicy(platformOf(req.get('x-app-platform')));
   if (compareVersions(version, policy.minimum) < 0) {
     return res.status(426).json({

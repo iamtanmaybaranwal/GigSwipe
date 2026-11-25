@@ -13,7 +13,7 @@ export const setRemindersEnabled = (on: boolean) => prefs.set('reminders', on ? 
 
 /** Asks for notification permission once (Android 13+), the first time a reminder is needed. */
 async function ensurePermission(): Promise<boolean> {
-  if (Platform.OS !== 'android' || Number(Platform.Version) < 33) return true;
+  if (Platform.OS !== 'android' || Number(Platform.Version) < 33) return true; // web/iOS: nothing to ask here
   const perm = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
   if (await PermissionsAndroid.check(perm)) return true;
   if (prefs.get('notif_asked') === '1') return false;

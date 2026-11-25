@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="414" height="868" viewBox="-12 -12 414 868">
+  <defs>
+    <clipPath id="screen"><rect x="0" y="0" width="390" height="844" rx="48"/></clipPath>
+    <marker id="head" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="26" refX="18" refY="13" orient="auto">
+      <path d="M0 0 L26 13 L0 26 L6 13 z" fill="#FF5864"/>
+    </marker>
+  </defs>
+  <rect x="-10" y="-10" width="410" height="864" rx="56" fill="#111827"/>
+  <g clip-path="url(#screen)">
+    <rect width="390" height="844" fill="#fff"/>
+    
+  
+  <rect x="155" y="130" width="80" height="80" rx="22" fill="#FF5864"/>
+  <text x="195" y="186" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="900" font-size="46" fill="#fff">G</text>
+  <text x="195" y="255" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="30" fill="#0F172A">GigSwipe</text>
+  <text x="195" y="290" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#64748B">Local gigs.</text>
+  <text x="195" y="314" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#64748B">One swipe away.</text>
+  
+    <rect x="34" y="360" width="38" height="38" rx="11" fill="#FFF1F2"/>
+    <rect x="86" y="364" width="150" height="11" rx="5" fill="#0F172A" opacity="0.85"/>
+    <rect x="86" y="384" width="230" height="9" rx="4" fill="#94A3B8"/>
+    <rect x="34" y="418" width="38" height="38" rx="11" fill="#FFF1F2"/>
+    <rect x="86" y="422" width="130" height="11" rx="5" fill="#0F172A" opacity="0.85"/>
+    <rect x="86" y="442" width="215" height="9" rx="4" fill="#94A3B8"/>
+    <rect x="34" y="476" width="38" height="38" rx="11" fill="#FFF1F2"/>
+    <rect x="86" y="480" width="110" height="11" rx="5" fill="#0F172A" opacity="0.85"/>
+    <rect x="86" y="500" width="200" height="9" rx="4" fill="#94A3B8"/>
+  <rect x="28" y="550" width="334" height="50" rx="14" fill="#FF5864"/>
+  <text x="195" y="581" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="17" fill="#fff">Get started →</text>
+  <rect width="390" height="844" fill="#000" opacity="0.35"/>
+  <rect x="0" y="150" width="390" height="844" rx="16" fill="#F2F2F7"/>
+  <rect x="175" y="160" width="40" height="5" rx="3" fill="#C7C7CC"/>
+  <rect x="16" y="182" width="44" height="44" rx="11" fill="#FF5864"/>
+  <text x="38" y="213" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="900" font-size="26" fill="#fff">G</text>
+  <text x="72" y="200" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="700" font-size="16" fill="#0F172A">GigSwipe</text>
+  <text x="72" y="220" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#6B7280">app.gigswipe.in · Options ›</text>
+  
+    <circle cx="52" cy="285" r="29" fill="#3B82F6"/>
+    <text x="52" y="336" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#0F172A">AirDrop</text>
+    <circle cx="147" cy="285" r="29" fill="#22C55E"/>
+    <text x="147" y="336" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#0F172A">Messages</text>
+    <circle cx="242" cy="285" r="29" fill="#60A5FA"/>
+    <text x="242" y="336" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#0F172A">Mail</text>
+    <circle cx="337" cy="285" r="29" fill="#25D366"/>
+    <text x="337" y="336" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#0F172A">WhatsApp</text>
+  <rect x="16" y="390" width="358" height="250" rx="12" fill="#fff"/>
+  
+    
+    
+    <text x="34" y="422" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="400" fill="#0F172A">Copy</text>
+    <rect x="333" y="404" width="22" height="22" rx="5" fill="none" stroke="#6B7280" stroke-width="1.8"/>
+    <rect x="32" y="440" width="326" height="1" fill="#E5E7EB"/>
+    
+    <text x="34" y="472" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="400" fill="#0F172A">Add to Reading List</text>
+    <rect x="333" y="454" width="22" height="22" rx="5" fill="none" stroke="#6B7280" stroke-width="1.8"/>
+    <rect x="32" y="490" width="326" height="1" fill="#E5E7EB"/>
+    
+    <text x="34" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="400" fill="#0F172A">Add Bookmark</text>
+    <rect x="333" y="504" width="22" height="22" rx="5" fill="none" stroke="#6B7280" stroke-width="1.8"/>
+    <rect x="32" y="540" width="326" height="1" fill="#E5E7EB"/>
+    
+    <text x="34" y="572" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="400" fill="#0F172A">Find on Page</text>
+    <rect x="333" y="554" width="22" height="22" rx="5" fill="none" stroke="#6B7280" stroke-width="1.8"/>
+    <rect x="32" y="590" width="326" height="1" fill="#E5E7EB"/>
+    <rect x="18" y="592" width="354" height="46" rx="10" fill="#FFF1F2"/>
+    <text x="34" y="622" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#0F172A">Add to Home Screen</text>
+    <rect x="332" y="603" width="24" height="24" rx="6" fill="none" stroke="#0F172A" stroke-width="2"/>
+      <path d="M344 609 v12 M338 615 h12" stroke="#0F172A" stroke-width="2.2" stroke-linecap="round"/>
+  
+  <circle cx="344" cy="615" r="35" fill="#FF5864" opacity="0.14"/>
+  <circle cx="344" cy="615" r="26" fill="none" stroke="#FF5864" stroke-width="4"/>
+  <path d="M150 740 Q260.4198015371941 729.714080951803 315.41909418045526 633.4155321002221" fill="none" stroke="#FF5864" stroke-width="5" stroke-linecap="round" marker-end="url(#head)"/>
+  <rect x="43.5" y="752" width="213" height="40" rx="20" fill="#FF5864"/>
+  <text x="150" y="778" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#fff">Add to Home Screen</text>
+    
+  <text x="34" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0F172A">9:41</text>
+  <rect x="328" y="22" width="26" height="13" rx="4" fill="none" stroke="#0F172A" stroke-width="1.5"/>
+  <rect x="330" y="24" width="19" height="9" rx="2" fill="#0F172A"/>
+  <rect x="356" y="26" width="2" height="5" rx="1" fill="#0F172A"/>
+  <path d="M298 33 a9 9 0 0 1 16 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <path d="M302 33 a5 5 0 0 1 8 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+    <rect x="133" y="11" width="124" height="34" rx="17" fill="#000"/>
+    <rect x="128" y="831" width="134" height="5" rx="3" fill="#0F172A" opacity="0.85"/>
+  </g>
+</svg>

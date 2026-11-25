@@ -79,3 +79,6 @@ yarn-error.log
 android/keystore.properties
 *.keystore
 !debug.keystore
+
+# Web app build output
+web/dist/

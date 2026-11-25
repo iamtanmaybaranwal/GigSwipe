@@ -411,7 +411,7 @@ function RoundAction({ icon, color, bg, size, label, onPress, disabled }: {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
-  logo: { fontSize: 24, fontWeight: '900', color: colors.accent, letterSpacing: -0.8 },
+  logo: { fontSize: 22, fontWeight: '900', color: colors.accent, letterSpacing: -0.8, flexShrink: 1, marginRight: 6 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 
   searchRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
