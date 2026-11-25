@@ -1,57 +1,49 @@
 import { Router } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import { applications, users, messages } from '../store';
 import { requireAuth } from '../middleware/auth';
-import type { Message } from '../types';
+import { ah, HttpError, requireId } from '../utils/http';
+import { serializeMessage } from '../utils/serialize';
+import { loadParticipantApplication, markRead, postMessage } from '../services/chat';
+import MessageModel from '../models/Message';
 
 const router = Router();
+const PAGE_SIZE = 200;
 
-// GET /api/chat/:applicationId — fetch all messages in a thread
-router.get('/:applicationId', requireAuth, (req, res) => {
+// GET /api/chat/:applicationId — messages in a thread (oldest → newest).
+// Pass ?before=<ISO timestamp> to load older pages. Marks the thread as read.
+router.get('/:applicationId', requireAuth, ah(async (req, res) => {
   const userId = req.user!.id;
+  const applicationId = requireId(req.params.applicationId, 'Conversation');
+  const app = await loadParticipantApplication(applicationId, userId);
+  if (!app) throw new HttpError(403, 'You are not part of this conversation');
 
-  const app = applications.get(req.params.applicationId);
-  if (!app) return res.status(404).json({ error: 'Conversation not found' });
+  const before = typeof req.query.before === 'string' ? new Date(req.query.before) : null;
+  const filter: Record<string, unknown> = { applicationId };
+  if (before && !isNaN(before.getTime())) filter.createdAt = { $lt: before };
 
-  if (app.workerId !== userId && app.businessId !== userId) {
-    return res.status(403).json({ error: 'You are not part of this conversation' });
-  }
+  const newestFirst = await MessageModel.find(filter).sort({ createdAt: -1 }).limit(PAGE_SIZE).lean();
+  if (!before) await markRead(app, userId);
 
-  const thread = messages.get(req.params.applicationId) ?? [];
-  res.json({ messages: thread });
-});
+  res.json({
+    messages: newestFirst.reverse().map(serializeMessage),
+    hasMore: newestFirst.length === PAGE_SIZE,
+  });
+}));
 
-// POST /api/chat/:applicationId/message — REST fallback for sending a message
-// (Socket.io is preferred for real-time; this endpoint is the backup)
-router.post('/:applicationId/message', requireAuth, (req, res) => {
-  const userId = req.user!.id;
+// POST /api/chat/:applicationId/read — mark the thread as read (used while the chat is open)
+router.post('/:applicationId/read', requireAuth, ah(async (req, res) => {
+  const applicationId = requireId(req.params.applicationId, 'Conversation');
+  const app = await loadParticipantApplication(applicationId, req.user!.id);
+  if (!app) throw new HttpError(403, 'You are not part of this conversation');
+  await markRead(app, req.user!.id);
+  res.json({ success: true });
+}));
 
-  const app = applications.get(req.params.applicationId);
-  if (!app) return res.status(404).json({ error: 'Conversation not found' });
-
-  if (app.workerId !== userId && app.businessId !== userId) {
-    return res.status(403).json({ error: 'You are not part of this conversation' });
-  }
-
-  const { text } = req.body;
-  if (!text?.trim()) return res.status(400).json({ error: 'text is required' });
-
-  const sender = users.get(userId);
-  const msg: Message = {
-    id:            uuidv4(),
-    applicationId: req.params.applicationId,
-    senderId:      userId,
-    senderName:    sender?.name ?? 'Unknown',
-    senderRole:    sender?.role ?? 'worker',
-    text:          text.trim(),
-    timestamp:     new Date().toISOString(),
-  };
-
-  const thread = messages.get(req.params.applicationId) ?? [];
-  thread.push(msg);
-  messages.set(req.params.applicationId, thread);
-
-  res.status(201).json({ message: msg });
-});
+// POST /api/chat/:applicationId/message — REST fallback when the socket is down
+router.post('/:applicationId/message', requireAuth, ah(async (req, res) => {
+  const applicationId = requireId(req.params.applicationId, 'Conversation');
+  const clientId = typeof req.body?.clientId === 'string' ? req.body.clientId.slice(0, 64) : undefined;
+  const message = await postMessage(applicationId, req.user!.id, String(req.body?.text ?? ''), clientId);
+  res.status(201).json({ message });
+}));
 
 export default router;

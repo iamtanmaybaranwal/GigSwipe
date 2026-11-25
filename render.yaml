@@ -1,0 +1,44 @@
+# Render Blueprint: deploys the GigSwipe backend (REST API + Socket.io) with HTTPS.
+# In Render: New → Blueprint → pick this repo. Secrets marked `sync: false` are
+# asked for once in the Render dashboard (they are never stored in git).
+services:
+  - type: web
+    name: gigswipe-api
+    runtime: node
+    region: singapore          # closest Render region to India
+    plan: free                 # free sleeps after 15 min idle; "starter" ($7/mo) stays awake
+    rootDir: backend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: CURRENCY_SYMBOL
+        value: "₹"
+      - key: JWT_SECRET
+        generateValue: true    # Render creates a long random secret
+      - key: MONGODB_URI
+        sync: false            # paste your Atlas connection string
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: GOOGLE_GEOCODING_API_KEY
+        sync: false            # optional, leave empty
+      # App updates (see README → Releasing an update). Changing these restarts the server.
+      - key: APP_DOWNLOAD_URL
+        sync: false            # your website's download page
+      - key: ANDROID_LATEST_VERSION
+        value: "1.0.0"
+      - key: ANDROID_MIN_VERSION
+        value: "1.0.0"
+      - key: IOS_LATEST_VERSION
+        value: "1.0.0"
+      - key: IOS_MIN_VERSION
+        value: "1.0.0"

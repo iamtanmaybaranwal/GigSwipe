@@ -2,11 +2,23 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export type UserRole = 'worker' | 'business';
 
+/** When a job seeker is usually free. Stored as keys; the app shows the labels. */
+export const AVAILABILITY_SLOTS = [
+  'weekday_mornings', 'weekday_afternoons', 'weekday_evenings', 'weekends', 'nights', 'flexible',
+] as const;
+
+interface GeoPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [lng, lat]
+}
+
 export interface IUser extends Document {
   email: string;
+  emailVerified?: boolean;
   role: UserRole;
   name: string;
   avatarColor?: string;
+  photoUrl?: string;
   passwordHash?: string;
   // Business-only fields
   businessName?: string;
@@ -21,19 +33,26 @@ export interface IUser extends Document {
   skills?: string[];
   bio?: string;
   sampleWork?: string[];
+  availability?: string[];
+  availabilityNote?: string;
+  availableUntil?: Date;  // "Available now" is on until this time
+  discoverable?: boolean; // job givers can find this person in worker search
   // Shared: comfortable working range (both roles)
   locationLabel?: string;
   latitude?: number;
   longitude?: number;
   radiusMiles?: number;
+  geo?: GeoPoint; // mirror of latitude/longitude for $geoNear (worker search)
 }
 
 const UserSchema = new Schema<IUser>(
   {
     email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
+    emailVerified: { type: Boolean, default: false },
     role:         { type: String, enum: ['worker', 'business'], required: true },
     name:         { type: String, required: true, trim: true },
     avatarColor:  { type: String },
+    photoUrl:     { type: String },
     passwordHash: { type: String, select: false }, // never returned by default; use .select('+passwordHash') when needed
     // Business fields
     businessName: { type: String, trim: true },
@@ -48,11 +67,19 @@ const UserSchema = new Schema<IUser>(
     skills:       [{ type: String }],
     bio:          { type: String, trim: true },
     sampleWork:   [{ type: String }],
+    availability: [{ type: String, enum: AVAILABILITY_SLOTS }],
+    availabilityNote: { type: String, trim: true },
+    availableUntil:   { type: Date },
+    discoverable:     { type: Boolean, default: true },
     // Shared: comfortable working range (both roles)
     locationLabel: { type: String, trim: true },
     latitude:       { type: Number },
     longitude:      { type: Number },
     radiusMiles:    { type: Number },
+    geo: {
+      type:        { type: String, enum: ['Point'] },
+      coordinates: { type: [Number] },
+    },
   },
   {
     timestamps: true,
@@ -67,5 +94,8 @@ const UserSchema = new Schema<IUser>(
     },
   }
 );
+
+UserSchema.index({ geo: '2dsphere' }, { sparse: true });
+UserSchema.index({ role: 1, discoverable: 1 });
 
 export default mongoose.model<IUser>('User', UserSchema);
