@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="414" height="868" viewBox="-12 -12 414 868">
+  <defs>
+    <clipPath id="screen"><rect x="0" y="0" width="390" height="844" rx="48"/></clipPath>
+    <marker id="head" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="26" refX="18" refY="13" orient="auto">
+      <path d="M0 0 L26 13 L0 26 L6 13 z" fill="#FF5864"/>
+    </marker>
+  </defs>
+  <rect x="-10" y="-10" width="410" height="864" rx="56" fill="#111827"/>
+  <g clip-path="url(#screen)">
+    <rect width="390" height="844" fill="#fff"/>
+    
+  <rect width="390" height="844" fill="#F2F2F7"/>
+  <text x="24" y="94" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#2563EB">Cancel</text>
+  <text x="195" y="94" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#0F172A">Add to Home Screen</text>
+  <text x="346" y="94" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#2563EB">Add</text>
+  <rect x="16" y="130" width="358" height="96" rx="12" fill="#fff"/>
+  <rect x="30" y="144" width="68" height="68" rx="16" fill="#FF5864"/>
+  <text x="64" y="191" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="900" font-size="40" fill="#fff">G</text>
+  <text x="114" y="172" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#0F172A">GigSwipe</text>
+  <rect x="114" y="182" width="240" height="1" fill="#E5E7EB"/>
+  <text x="114" y="204" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#6B7280">https://app.gigswipe.in/</text>
+  <rect x="16" y="244" width="358" height="52" rx="12" fill="#fff"/>
+  <text x="34" y="276" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#0F172A">Open as Web App</text>
+  <rect x="306" y="256" width="51" height="31" rx="16" fill="#34C759"/>
+  <circle cx="341" cy="271.5" r="13.5" fill="#fff"/>
+  <text x="34" y="324" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#6B7280">An icon will be added to your Home Screen so you</text>
+  <text x="34" y="342" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#6B7280">can quickly access this website.</text>
+  
+  <circle cx="346" cy="82" r="37" fill="#FF5864" opacity="0.14"/>
+  <circle cx="346" cy="82" r="28" fill="none" stroke="#FF5864" stroke-width="4"/>
+  <path d="M200 460 Q326.01186063501876 310.77148017164143 333.0291397513217 115.58209023287944" fill="none" stroke="#FF5864" stroke-width="5" stroke-linecap="round" marker-end="url(#head)"/>
+  <rect x="146.5" y="472" width="107" height="40" rx="20" fill="#FF5864"/>
+  <text x="200" y="498" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#fff">Tap Add</text>
+    
+  <text x="34" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0F172A">9:41</text>
+  <rect x="328" y="22" width="26" height="13" rx="4" fill="none" stroke="#0F172A" stroke-width="1.5"/>
+  <rect x="330" y="24" width="19" height="9" rx="2" fill="#0F172A"/>
+  <rect x="356" y="26" width="2" height="5" rx="1" fill="#0F172A"/>
+  <path d="M298 33 a9 9 0 0 1 16 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <path d="M302 33 a5 5 0 0 1 8 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+    <rect x="133" y="11" width="124" height="34" rx="17" fill="#000"/>
+    <rect x="128" y="831" width="134" height="5" rx="3" fill="#0F172A" opacity="0.85"/>
+  </g>
+</svg>

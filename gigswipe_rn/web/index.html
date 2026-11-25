@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <title>GigSwipe · Local gigs, one swipe away</title>
+    <meta name="description" content="Find local gigs and hire people nearby. Swipe right to apply, chat instantly, confirm the hire with a code." />
+    <meta name="theme-color" content="#FF5864" />
+    <!-- iPhone / iPad: open full-screen when added to the Home Screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="GigSwipe" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <style>
+      html, body, #root { height: 100%; margin: 0; }
+      body { background: #E2E8F0; overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+      /* On laptops the app shows as a phone-width column in the middle of the screen */
+      #root { display: flex; flex-direction: column; overflow: hidden; max-width: 520px; margin: 0 auto; background: #F8FAFC; box-shadow: 0 0 40px rgba(15, 23, 42, 0.08); }
+      @media (max-width: 520px) { #root { box-shadow: none; } }
+      #boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+        background: #fff; font: 800 26px system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #0F172A; }
+      #boot .g { width: 80px; height: 80px; border-radius: 24px; background: #FF5864; color: #fff; display: flex; align-items: center;
+        justify-content: center; font-size: 44px; font-weight: 900; }
+    </style>
+  </head>
+  <body>
+    <noscript>GigSwipe needs JavaScript. Please enable it in your browser.</noscript>
+    <div id="boot"><div class="g">G</div>GigSwipe</div>
+    <div id="root"></div>
+    <script>
+      // Hide the splash as soon as the app renders something
+      new MutationObserver(function (_, obs) {
+        if (document.getElementById('root').childElementCount) { var b = document.getElementById('boot'); if (b) b.remove(); obs.disconnect(); }
+      }).observe(document.getElementById('root'), { childList: true });
+    </script>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

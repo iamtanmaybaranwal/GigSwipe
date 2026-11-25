@@ -118,8 +118,9 @@ export function payText(g: { pay?: string; payAmount?: number; payUnit?: string 
 
 /** Short confirmation message (native toast on Android). */
 export function toast(message: string) {
-  if (Platform.OS === 'android') ToastAndroid.show(message, ToastAndroid.SHORT);
-  else Alert.alert(message);
+  // Android: native toast. Web: a small snackbar (see web/shims). iOS: an alert.
+  if (Platform.OS === 'ios') Alert.alert(message);
+  else ToastAndroid.show(message, ToastAndroid.SHORT);
 }
 
 /** Opens turn-by-turn directions in Google Maps (app if installed, otherwise browser). */

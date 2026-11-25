@@ -235,6 +235,10 @@ The app on your phone talks to the backend over the USB cable. To share an APK t
    The APK is at `android/app/build/outputs/apk/release/app-release.apk`. Share it via a link (website, Google Drive, WhatsApp). People need to allow "Install unknown apps" once.
 4. Back up `gigswipe_rn/android/app/gigswipe-release.keystore` and `gigswipe_rn/android/keystore.properties` somewhere safe and private. Every future update must be signed with the same key, or phones will refuse to update the app.
 
+## Web app (PWA)
+
+`gigswipe_rn/web` builds the same app for browsers. It can be installed on iPhone (Safari → Share → Add to Home Screen), Android, Windows and Mac. Build with `npm run build:web` in `gigswipe_rn` and upload `web/dist` to any static host; `web/public/install-ios.html` is the illustrated iPhone install guide. Details: [gigswipe_rn/README.md](gigswipe_rn/README.md#web-app-pwa-iphone-android-browsers-windows-mac).
+
 ## Releasing an update
 
 The app checks its version against the server on every launch, like banking apps:

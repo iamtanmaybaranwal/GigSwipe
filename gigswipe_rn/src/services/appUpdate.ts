@@ -11,7 +11,8 @@ import { BASE_URL } from '../config';
 import pkg from '../../package.json';
 
 export const APP_VERSION: string = pkg.version;
-export const APP_PLATFORM: 'android' | 'ios' = Platform.OS === 'ios' ? 'ios' : 'android';
+export const APP_PLATFORM: 'android' | 'ios' | 'web' =
+  Platform.OS === 'ios' ? 'ios' : Platform.OS === 'web' ? 'web' : 'android';
 
 export interface UpdateState {
   required: boolean;
@@ -39,6 +40,8 @@ export const dismissUpdateBanner = () => set({ dismissed: true });
 let inFlight: Promise<void> | null = null;
 
 export function checkForUpdate(): Promise<void> {
+  // The web app is always the latest version (served fresh by the website)
+  if (APP_PLATFORM === 'web') return Promise.resolve();
   if (inFlight) return inFlight;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);

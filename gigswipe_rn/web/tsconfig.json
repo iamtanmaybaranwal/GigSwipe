@@ -1,0 +1,13 @@
+{
+  // Type-checks the web build: browser APIs (DOM) and *.web.ts(x) files.
+  // Run: npm run typecheck:web
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "moduleSuffixes": [".web", ""],
+    "types": ["vite/client", "jest"],
+    "noEmit": true
+  },
+  "include": ["./*.ts", "./*.tsx", "./shims/**/*.ts", "./types.d.ts", "../App.tsx", "../src/**/*.ts", "../src/**/*.tsx"],
+  "exclude": ["dist", "vite.config.ts", "scripts"]
+}

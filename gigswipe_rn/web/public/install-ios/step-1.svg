@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="414" height="868" viewBox="-12 -12 414 868">
+  <defs>
+    <clipPath id="screen"><rect x="0" y="0" width="390" height="844" rx="48"/></clipPath>
+    <marker id="head" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="26" refX="18" refY="13" orient="auto">
+      <path d="M0 0 L26 13 L0 26 L6 13 z" fill="#FF5864"/>
+    </marker>
+  </defs>
+  <rect x="-10" y="-10" width="410" height="864" rx="56" fill="#111827"/>
+  <g clip-path="url(#screen)">
+    <rect width="390" height="844" fill="#fff"/>
+    
+  
+  <rect x="159" y="110" width="72" height="72" rx="20" fill="#FF5864"/>
+  <text x="195" y="160" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="900" font-size="42" fill="#fff">G</text>
+  <text x="195" y="224" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="28" fill="#0F172A">GigSwipe</text>
+  <text x="195" y="256" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#64748B">Local gigs. One swipe away.</text>
+  <rect x="28" y="296" width="334" height="48" rx="14" fill="#FF5864" opacity="0.9"/>
+  <text x="195" y="326" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="16" fill="#fff">Get started →</text>
+  
+  <rect x="0" y="694" width="390" height="150" fill="#F2F2F7"/>
+  <rect x="0" y="694" width="390" height="1" fill="#D1D5DB"/>
+  <rect x="14" y="706" width="362" height="48" rx="14" fill="#fff" stroke="#E5E7EB"/>
+  <text x="34" y="736" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#0F172A">aA</text>
+  <path d="M131 724 v-3 a5 5 0 0 1 10 0 v3" fill="none" stroke="#6B7280" stroke-width="1.8"/>
+  <rect x="129" y="723" width="14" height="11" rx="2" fill="#6B7280"/>
+  <text x="203" y="736" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#0F172A">app.gigswipe.in</text>
+  <path d="M346 724 a8 8 0 1 0 3 6" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <!-- toolbar: back, forward, share, bookmarks, tabs -->
+  <path d="M42 778 l-9 9 l9 9" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M112 778 l9 9 l-9 9" fill="none" stroke="#9CA3AF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#2563EB" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M186 780 h-4 v19 h26 v-19 h-4"/>
+    <path d="M195 790 v-20 M189 776 l6 -6 l6 6"/>
+  </g>
+  <path d="M268 776 h16 a4 4 0 0 1 4 4 v18 l-12 -7 l-12 7 v-18 a4 4 0 0 1 4 -4z" fill="none" stroke="#2563EB" stroke-width="2.2"/>
+  <rect x="332" y="774" width="20" height="20" rx="4" fill="none" stroke="#2563EB" stroke-width="2.2"/>
+  <rect x="337" y="779" width="20" height="20" rx="4" fill="#F2F2F7" stroke="#2563EB" stroke-width="2.2"/>
+  
+  <circle cx="203" cy="730" r="43" fill="#FF5864" opacity="0.14"/>
+  <circle cx="203" cy="730" r="34" fill="none" stroke="#FF5864" stroke-width="4"/>
+  <path d="M110 520 Q185.35367209514465 589.2547947604995 185.99310135257394 691.5973256348444" fill="none" stroke="#FF5864" stroke-width="5" stroke-linecap="round" marker-end="url(#head)"/>
+  <rect x="14" y="468" width="222" height="40" rx="20" fill="#FF5864"/>
+  <text x="125" y="494" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#fff">Open link in Safari</text>
+    
+  <text x="34" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#0F172A">9:41</text>
+  <rect x="328" y="22" width="26" height="13" rx="4" fill="none" stroke="#0F172A" stroke-width="1.5"/>
+  <rect x="330" y="24" width="19" height="9" rx="2" fill="#0F172A"/>
+  <rect x="356" y="26" width="2" height="5" rx="1" fill="#0F172A"/>
+  <path d="M298 33 a9 9 0 0 1 16 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <path d="M302 33 a5 5 0 0 1 8 0" fill="none" stroke="#0F172A" stroke-width="2"/>
+    <rect x="133" y="11" width="124" height="34" rx="17" fill="#000"/>
+    <rect x="128" y="831" width="134" height="5" rx="3" fill="#0F172A" opacity="0.85"/>
+  </g>
+</svg>

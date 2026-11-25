@@ -108,6 +108,26 @@ Without `keystore.properties`, release builds are signed with the debug key. Tha
 | Map is blank / shows a list | The phone has no internet, or the tile server is blocked. Check `MAP_TILE_URL` |
 | Changed `.env` but nothing happened | `npm run start:clean` (Metro caches `.env` values) |
 
+## Web app (PWA): iPhone, Android browsers, Windows, Mac
+
+The same code also builds as an installable web app with react-native-web + Vite (`web/`).
+
+| Command | What it does |
+|---|---|
+| `npm run web` | Dev server at http://localhost:5173 (uses `API_URL`) |
+| `npm run build:web` | Production build in `web/dist` (uses `API_URL_PRODUCTION`) |
+| `npm run preview:web` | Serve the production build locally |
+| `npm run typecheck:web` | Type-check the web-only code |
+| `npm run images:web` | Regenerate the icons + iPhone guide pictures (`APP_HOST=app.your-domain.com npm run images:web`) |
+
+Phone-only pieces have `*.web.ts(x)` versions: browser storage instead of the Keystore, browser GPS, the file picker for photos, Leaflet directly instead of the WebView. Reminders are phone-only.
+
+**Hosting (e.g. Hostinger):**
+1. Create a subdomain such as `app.your-domain.com` and turn on SSL (HTTPS is required for location and installing).
+2. Upload **everything inside `web/dist`**, including the hidden `.htaccess`, into that subdomain's folder (File Manager → `public_html/app` or the folder Hostinger shows).
+3. Open the address. Android/Windows/Mac users get an "Install" button; iPhone users get a "How?" link to `/install-ios.html`, the illustrated 5-step guide (pictures in `/install-ios/step-1…5.png`).
+4. To update: build again and replace the files. Installed apps update themselves on next launch.
+
 ## Translations
 
 All text goes through `t('English text')` from `src/i18n`. The English text is the key, and `src/i18n/hi.ts` maps it to Hindi. A string without a Hindi entry simply shows in English. To add a language, copy `hi.ts` (e.g. to `ta.ts`), translate the values and add it to `LANGUAGES` in `src/i18n/index.ts`. Keep `{placeholders}` exactly as they are (a unit test checks this).
