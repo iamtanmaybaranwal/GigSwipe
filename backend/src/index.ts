@@ -20,6 +20,7 @@ import savedRoutes from './routes/saved';
 import inviteRoutes from './routes/invites';
 import uploadRoutes from './routes/uploads';
 import appVersionRoutes, { requireSupportedApp } from './routes/appVersion';
+import pushRoutes from './routes/push';
 import UserModel from './models/User';
 import GigModel from './models/Gig';
 import ApplicationModel from './models/Application';
@@ -56,6 +57,7 @@ const authLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
+  skip: () => process.env.NODE_ENV === 'test', // automated tests sign up many accounts
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
@@ -105,6 +107,7 @@ app.use('/api/users',        userRoutes);
 app.use('/api/geo',          geoRoutes);
 app.use('/api/saved',        savedRoutes);
 app.use('/api/invites',      inviteRoutes);
+app.use('/api/push',         pushRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);

@@ -1,10 +1,11 @@
 // Shared pieces for the editable profile screens.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { api, errorMessage } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { LANGUAGES, setLanguage, t, useLanguage } from '../i18n';
 import { refreshReminders, remindersEnabled, setRemindersEnabled } from '../services/reminders';
+import { enablePush, pushState, type PushState } from '../services/push';
 import { colors, radius, spacing } from '../theme';
 import { toast } from '../utils/format';
 import { Button, Card, Chip, SectionTitle, TextField, ToggleRow } from './ui';
@@ -68,6 +69,9 @@ export function AccountCard() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [reminders, setReminders] = useState(remindersEnabled);
   const [savingVisible, setSavingVisible] = useState(false);
+  const [savingAlerts, setSavingAlerts] = useState(false);
+  const [push, setPush] = useState<PushState | null>(null);
+  useEffect(() => { pushState().then(setPush).catch(() => {}); }, []);
   const isWorker = user?.role === 'worker';
 
   const toggleReminders = (on: boolean) => {
@@ -75,6 +79,24 @@ export function AccountCard() {
     setRemindersEnabled(on);
     refreshReminders();
   };
+  const toggleAlerts = async (on: boolean) => {
+    setSavingAlerts(true);
+    try {
+      const { user: updated } = await api.auth.updateProfile({ notifyNewGigs: on });
+      setUser(updated);
+      if (on) {
+        const ok = await enablePush();
+        setPush(await pushState());
+        toast(ok ? t("Done! We'll tell you when a gig is posted near you.") : t('Notifications are off. You can turn them on in Settings.'));
+      }
+    } catch (e) { toast(errorMessage(e)); }
+    finally { setSavingAlerts(false); }
+  };
+  const alertsHint = push === 'denied' ? t('Notifications are blocked for GigSwipe. Allow them in your phone settings.')
+    : push === 'needs-install' ? t('On iPhone, add GigSwipe to your Home Screen first to get notifications.')
+    : push === 'unsupported' ? t('This device or browser cannot receive notifications. You will still see new gigs live in the app.')
+    : t('A notification when a gig is posted inside your working range (at most 6 an hour).');
+
   const toggleDiscoverable = async (on: boolean) => {
     setSavingVisible(true);
     try {
@@ -97,6 +119,10 @@ export function AccountCard() {
       </View>
       <ToggleRow icon="notifications-outline" title={t('Gig reminders')} value={reminders} onChange={toggleReminders}
         subtitle={t('A notification the day before and 1 hour before a gig you are booked for.')} />
+      {isWorker ? (
+        <ToggleRow icon="megaphone-outline" title={t('New gig alerts')} value={user?.notifyNewGigs !== false}
+          onChange={toggleAlerts} disabled={savingAlerts} subtitle={alertsHint} />
+      ) : null}
       {isWorker ? (
         <ToggleRow icon="eye-outline" title={t('Let job givers find me')} value={user?.discoverable !== false}
           onChange={toggleDiscoverable} disabled={savingVisible}

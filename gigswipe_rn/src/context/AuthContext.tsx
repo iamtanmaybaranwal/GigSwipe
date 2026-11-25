@@ -8,6 +8,7 @@ import { api, setAuthToken, setUnauthorizedHandler, ApiError, type User } from '
 import { clearSession, loadSession, saveCachedUser, saveSession } from '../services/secureStorage';
 import { connectSocket, disconnectSocket } from '../services/socket';
 import { clearReminders } from '../services/reminders';
+import { syncPushRegistration, unregisterPush } from '../services/push';
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
 
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       disconnectSocket();
       clearReminders();
+      await unregisterPush(); // while the token still works
       setAuthToken(null);
       await clearSession();
       setUserState(null);
@@ -66,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         saveCachedUser(fresh);
         connectSocket(session.token);
         setStatus('signedIn');
+        syncPushRegistration();
       } catch (e) {
         if (cancelled) return;
         if (e instanceof ApiError && (e.status === 401 || e.status === 404)) {
@@ -89,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     connectSocket(token);
     setUserState(u);
     setStatus('signedIn');
+    syncPushRegistration();
   }, []);
 
   const setUser = useCallback((u: User) => {

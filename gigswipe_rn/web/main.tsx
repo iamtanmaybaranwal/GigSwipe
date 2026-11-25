@@ -2,6 +2,7 @@
 import { AppRegistry } from 'react-native';
 import ioniconsFont from '@react-native-vector-icons/ionicons/fonts/Ionicons.ttf?url';
 import App from '../App';
+import { registerSW } from 'virtual:pwa-register';
 import { setupInstallPrompt } from './install';
 
 // Icon font (the phone app bundles it natively)
@@ -15,3 +16,17 @@ AppRegistry.runApplication('GigSwipe', {
   rootTag: document.getElementById('root') as never, initialProps: {} });
 
 setupInstallPrompt();
+
+// Updates go live without reopening the app: look for a new version every
+// minute and whenever the app comes back to the screen. When one is found the
+// new service worker takes over and the page reloads into it.
+const UPDATE_CHECK_MS = 60 * 1000;
+registerSW({
+  immediate: true,
+  onRegisteredSW(_url, registration) {
+    if (!registration) return;
+    const check = () => { if (navigator.onLine) registration.update().catch(() => {}); };
+    setInterval(check, UPDATE_CHECK_MS);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  },
+});

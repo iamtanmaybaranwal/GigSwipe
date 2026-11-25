@@ -82,3 +82,6 @@ android/keystore.properties
 
 # Web app build output
 web/dist/
+
+# Firebase config for push (add your own; not shared in git)
+android/app/google-services.json

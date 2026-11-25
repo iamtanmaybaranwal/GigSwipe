@@ -33,6 +33,7 @@ export interface User {
   availableUntil?: string;
   availableNow?: boolean;
   discoverable?: boolean;
+  notifyNewGigs?: boolean;
   // Shared
   bio?: string;
   locationLabel?: string;

@@ -750,6 +750,18 @@ const hi: Record<string, string> = {
   'I have updated, check again': 'मैंने अपडेट कर लिया, फिर से जांचें',
   'A new version ({latest}) is available. Tap to update.': 'नया वर्ज़न ({latest}) उपलब्ध है। अपडेट करने के लिए दबाएँ।',
   'Please update GigSwipe to keep using it.': 'GigSwipe इस्तेमाल करते रहने के लिए कृपया इसे अपडेट करें।',
+  // ── Live updates & gig alerts ──────────────────────────────────────────────
+  '1 new gig nearby · Show': 'पास में 1 नया काम · देखें',
+  '{n} new gigs nearby · Show': 'पास में {n} नए काम · देखें',
+  'Get a notification when a gig is posted near you.': 'आपके पास कोई काम पोस्ट होने पर सूचना पाएँ।',
+  'Turn on': 'चालू करें',
+  "Done! We'll tell you when a gig is posted near you.": 'हो गया! आपके पास काम पोस्ट होते ही हम बताएँगे।',
+  'Notifications are off. You can turn them on in Settings.': 'सूचनाएँ बंद हैं। आप इन्हें सेटिंग्स में चालू कर सकते हैं।',
+  'New gig alerts': 'नए काम की सूचना',
+  'Notifications are blocked for GigSwipe. Allow them in your phone settings.': 'GigSwipe की सूचनाएँ बंद हैं। फ़ोन की सेटिंग्स में इन्हें चालू करें।',
+  'On iPhone, add GigSwipe to your Home Screen first to get notifications.': 'iPhone पर सूचनाएँ पाने के लिए पहले GigSwipe को होम स्क्रीन पर जोड़ें।',
+  'This device or browser cannot receive notifications. You will still see new gigs live in the app.': 'यह डिवाइस या ब्राउज़र सूचनाएँ नहीं ले सकता। नए काम आपको ऐप में तुरंत दिखते रहेंगे।',
+  'A notification when a gig is posted inside your working range (at most 6 an hour).': 'जब आपकी काम की दूरी के अंदर कोई काम पोस्ट हो, तब सूचना (एक घंटे में ज़्यादा से ज़्यादा 6)।',
 };
 
 export default hi;

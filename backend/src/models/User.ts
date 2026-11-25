@@ -37,6 +37,8 @@ export interface IUser extends Document {
   availabilityNote?: string;
   availableUntil?: Date;  // "Available now" is on until this time
   discoverable?: boolean; // job givers can find this person in worker search
+  notifyNewGigs?: boolean; // push notification when a gig is posted inside their range
+  gigAlerts?: { windowStart?: Date; count?: number }; // hourly cap on those notifications
   // Shared: comfortable working range (both roles)
   locationLabel?: string;
   latitude?: number;
@@ -71,6 +73,8 @@ const UserSchema = new Schema<IUser>(
     availabilityNote: { type: String, trim: true },
     availableUntil:   { type: Date },
     discoverable:     { type: Boolean, default: true },
+    notifyNewGigs:    { type: Boolean, default: true },
+    gigAlerts:        { windowStart: Date, count: Number },
     // Shared: comfortable working range (both roles)
     locationLabel: { type: String, trim: true },
     latitude:       { type: Number },

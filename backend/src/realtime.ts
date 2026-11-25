@@ -20,6 +20,13 @@ export function emitToUser(userId: string, event: string, payload: unknown) {
   io?.to(userRoom(userId)).emit(event, payload);
 }
 
+const roleRoom = (role: string) => `role:${role}`;
+
+/** Push an event to everyone signed in with a role ('worker' | 'business'). */
+export function emitToRole(role: 'worker' | 'business', event: string, payload: unknown) {
+  io?.to(roleRoom(role)).emit(event, payload);
+}
+
 /** Push an event to everyone viewing a chat thread. */
 export function emitToChat(applicationId: string, event: string, payload: unknown) {
   io?.to(applicationId).emit(event, payload);
@@ -46,6 +53,7 @@ export function initRealtime(httpServer: HttpServer) {
   io.on('connection', (socket: Socket) => {
     const me = socket.data.user as { id: string; role: 'worker' | 'business' };
     socket.join(userRoom(me.id));
+    socket.join(roleRoom(me.role)); // e.g. "a gig was closed" goes to every job seeker
 
     socket.on('join_chat', async (applicationId: unknown, ack?: unknown) => {
       const reply = safeAck(ack);

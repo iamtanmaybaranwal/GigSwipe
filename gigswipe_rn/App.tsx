@@ -11,6 +11,8 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { ErrorBoundary, OfflineBanner } from './src/components/AppChrome';
 import { ForceUpdateScreen, UpdateAvailableBar, useUpdateCheck } from './src/components/AppUpdate';
 import { useUpdateState } from './src/services/appUpdate';
+import { navigationRef } from './src/navigation/ref';
+import { GigLinkOpener } from './src/components/GigLinkOpener';
 import { colors } from './src/theme';
 import { useLanguage } from './src/i18n';
 
@@ -44,9 +46,10 @@ export default function App() {
         ) : (
           <AuthProvider>
             <View style={{ flex: 1 }}>
-              <NavigationContainer key={lang} theme={navTheme} initialState={navState.current}
+              <NavigationContainer key={lang} ref={navigationRef} theme={navTheme} initialState={navState.current}
                 onStateChange={st => { navState.current = st; }}>
                 <RootNavigator />
+                <GigLinkOpener />
               </NavigationContainer>
               <OfflineBanner />
               <UpdateAvailableBar />

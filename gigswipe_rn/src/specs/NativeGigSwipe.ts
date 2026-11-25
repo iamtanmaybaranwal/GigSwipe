@@ -14,6 +14,10 @@ export interface Spec extends TurboModule {
    * Reminders survive reboots and app updates.
    */
   setReminders(json: string): void;
+  /** Firebase Cloud Messaging token for this device, or '' if push isn't configured. */
+  getPushToken(): Promise<string>;
+  /** Gig id from a tapped "new gig" notification (returned once), or ''. Synchronous. */
+  consumePendingGigId(): string;
 }
 
 export default TurboModuleRegistry.get<Spec>('NativeGigSwipe');

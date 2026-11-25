@@ -239,6 +239,14 @@ The app on your phone talks to the backend over the USB cable. To share an APK t
 
 `gigswipe_rn/web` builds the same app for browsers. It can be installed on iPhone (Safari → Share → Add to Home Screen), Android, Windows and Mac. Build with `npm run build:web` in `gigswipe_rn` and upload `web/dist` to any static host; `web/public/install-ios.html` is the illustrated iPhone install guide. Details: [gigswipe_rn/README.md](gigswipe_rn/README.md#web-app-pwa-iphone-android-browsers-windows-mac).
 
+## Live updates and push notifications
+
+- **While the app is open** everything updates live over Socket.io: new gigs near you appear in the feed ("2 new gigs nearby · Show"), gigs that close or fill disappear from every deck, chats, applications and invites refresh instantly, and a forced update applies within seconds (the server restarts when its version settings change; apps reconnect and re-check). The web app checks for a new version every minute and reloads into it.
+- **When the app is closed**, job seekers get a push notification when a gig is posted inside *their own* working range ("New gig near you: Cafe helper · ₹600/day · 1.2 km away"). Tapping it opens the gig. People can turn this off in Settings → New gig alerts; at most 6 alerts per person per hour.
+  - **Web app (Android, iPhone Home Screen app, Windows, Mac):** Web Push. Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` on the server.
+  - **Android app:** Firebase Cloud Messaging. Create a Firebase project → add an Android app with package `com.gigswipe.app` → download `google-services.json` into `gigswipe_rn/android/app/` and rebuild. On the server set `FIREBASE_SERVICE_ACCOUNT` (Project settings → Service accounts → Generate new private key).
+  - Without these settings the app works normally; only the closed-app notifications are off.
+
 ## Releasing an update
 
 The app checks its version against the server on every launch, like banking apps:
@@ -271,6 +279,8 @@ Users install the new APK over the old one and keep their login, as long as it's
 | `SMTP_HOST` / `SMTP_PORT` | ❌ | Only for non-Gmail providers (Brevo, Resend, Zoho…) |
 | `APP_DOWNLOAD_URL` | ❌ | Where users download the app (shown on "Update required") |
 | `ANDROID_LATEST_VERSION` / `ANDROID_MIN_VERSION` | ❌ | Newest version / oldest version still allowed (also `IOS_*`, and optional `ANDROID_UPDATE_URL`, `ANDROID_UPDATE_MESSAGE`) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | ❌ | Web Push keys for the PWA's notifications (`npx web-push generate-vapid-keys`) |
+| `FIREBASE_SERVICE_ACCOUNT` | ❌ | Firebase service-account JSON (or base64 of it) for Android push |
 | `CURRENCY_SYMBOL` | ❌ | Shown in gig pay, e.g. `₹800/day` (default `₹`). Use the same value in `gigswipe_rn/.env`. |
 
 > ⚠️ Never commit your `.env` file. It is already listed in `backend/.gitignore`.
@@ -375,6 +385,13 @@ Base URL: `http://<host>:3001/api`
 |---|---|---|
 | GET | `/app/version?platform=android&version=1.0.0` | `updateRequired`, `updateAvailable`, `latest`, `minimum`, `updateUrl` |
 
+### Push
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/push/config` | Web Push public key and which push channels are enabled |
+| POST | `/push/register` 🔒 | `{ platform: 'web', subscription }` or `{ platform: 'android', token }`, plus `lang` |
+| POST | `/push/unregister` 🔒 | `{ token }` (FCM token or Web Push endpoint), on sign-out |
+
 ### Health
 | Method | Endpoint | Description |
 |---|---|---|
@@ -395,6 +412,8 @@ Socket.io runs on the same port as the REST API.
 | `inbox_update` | server → user | `{ applicationId }` when a conversation changes |
 | `application_update` | server → user | `{ applicationId, status }` when an application changes (`withdrawn` when a job seeker withdraws) |
 | `invite_update` | server → user | `{ inviteId, status }` when an invite is sent, accepted or declined |
+| `gig_new` | server → job seekers in range | `{ gigId }` when a gig is posted or reopened nearby (`remote: true` for remote gigs, sent to all) |
+| `gig_closed` | server → all job seekers | `{ gigId }` when a gig is closed, filled or deleted |
 
 Sockets must connect with `auth: { token }` (the login JWT). The sender is always taken from the token, and only the job seeker and job giver on an application can join or post to its chat.
 
@@ -446,7 +465,8 @@ This project is an MVP under active development.
 - [x] Quick replies in chat
 - [x] On-device gig reminders
 - [x] Hindi language
-- [ ] Push notifications for new messages (Firebase)
+- [x] Live feed updates and push alerts for new gigs nearby
+- [ ] Push notifications for new messages and applications
 - [x] Forgot password and email verification (email OTP)
 - [ ] Report / block, delete account, phone OTP
 - [ ] In-app payments and payouts

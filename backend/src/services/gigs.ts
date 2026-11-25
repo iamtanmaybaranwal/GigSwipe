@@ -5,7 +5,7 @@ import ApplicationModel, { type IApplication } from '../models/Application';
 import UploadModel from '../models/Upload';
 import { HttpError } from '../utils/http';
 import { isGigExpired } from '../utils/serializeGig';
-import { emitToUser } from '../realtime';
+import { emitToRole, emitToUser } from '../realtime';
 
 export const UPLOAD_PATH = /^\/api\/uploads\/([a-f0-9]{24})$/;
 
@@ -75,6 +75,7 @@ export async function recordHire(gigId: mongoose.Types.ObjectId | string) {
 
   gig.status = 'filled';
   await gig.save();
+  emitToRole('worker', 'gig_closed', { gigId: String(gig._id) });
   const pending = await ApplicationModel.find({ gigId: gig._id, status: 'pending' });
   if (pending.length) {
     await ApplicationModel.updateMany({ _id: { $in: pending.map(a => a._id) } }, { status: 'rejected' });
