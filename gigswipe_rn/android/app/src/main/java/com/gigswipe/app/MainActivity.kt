@@ -1,9 +1,12 @@
 package com.gigswipe.app
 
+import android.content.Intent
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.gigswipe.app.device.GigSwipeMessagingService
 
 class MainActivity : ReactActivity() {
 
@@ -19,4 +22,15 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  // Opened from a "new gig near you" notification: remember the gig so the app shows it
+  override fun onCreate(savedInstanceState: Bundle?) {
+    GigSwipeMessagingService.rememberLaunchIntent(this, intent)
+    super.onCreate(savedInstanceState)
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    GigSwipeMessagingService.rememberLaunchIntent(this, intent)
+    super.onNewIntent(intent)
+  }
 }

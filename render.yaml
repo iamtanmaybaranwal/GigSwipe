@@ -31,6 +31,13 @@ services:
         sync: false
       - key: GOOGLE_GEOCODING_API_KEY
         sync: false            # optional, leave empty
+      # Push notifications ("new gig near you"). See README → Push notifications.
+      - key: VAPID_PUBLIC_KEY
+        sync: false            # web app / iPhone (copy from backend/.env)
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false            # Android app: Firebase service-account JSON (base64 is fine)
       # App updates (see README → Releasing an update). Changing these restarts the server.
       - key: APP_DOWNLOAD_URL
         sync: false            # your website's download page

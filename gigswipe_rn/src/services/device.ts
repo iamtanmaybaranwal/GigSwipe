@@ -26,3 +26,13 @@ export interface Reminder {
 export function setReminders(list: Reminder[]) {
   try { NativeGigSwipe?.setReminders(JSON.stringify(list)); } catch { /* ignore */ }
 }
+
+/** Firebase push token for this device ('' when push isn't set up in this build). */
+export async function getPushToken(): Promise<string> {
+  try { return NativeGigSwipe ? await NativeGigSwipe.getPushToken() : ''; } catch { return ''; }
+}
+
+/** Gig id from a tapped "new gig" notification (returned once), or ''. */
+export function consumePendingGigId(): string {
+  try { return NativeGigSwipe ? NativeGigSwipe.consumePendingGigId() : ''; } catch { return ''; }
+}

@@ -19,3 +19,7 @@ export interface Reminder {
 export function setReminders(_list: Reminder[]) {
   // not available in the browser
 }
+
+// Push on the web goes through the service worker (see services/push.web.ts)
+export async function getPushToken(): Promise<string> { return ''; }
+export function consumePendingGigId(): string { return ''; }

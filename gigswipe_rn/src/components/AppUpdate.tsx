@@ -8,16 +8,21 @@ import {
   APP_VERSION, checkForUpdate, dismissUpdateBanner, useUpdateState,
 } from '../services/appUpdate';
 import { Button } from './ui';
+import { onSocketEvent } from '../services/socket';
 import { Icon } from './Icon';
 
 const openStore = (url?: string) => { if (url) Linking.openURL(url).catch(() => {}); };
 
-/** Checks on launch and every time the app returns to the foreground. */
+/** Checks on launch, on returning to the app, on reconnecting to the server, and every 15 minutes. */
 export function useUpdateCheck() {
   useEffect(() => {
     checkForUpdate();
     const sub = AppState.addEventListener('change', st => { if (st === 'active') checkForUpdate(); });
-    return () => sub.remove();
+    // Changing the version rules on the server restarts it; the live connection
+    // then reconnects and we check again, so a forced update applies within seconds.
+    const off = onSocketEvent<boolean>('connection_change', up => { if (up) checkForUpdate(); });
+    const timer = setInterval(checkForUpdate, 15 * 60 * 1000);
+    return () => { sub.remove(); off(); clearInterval(timer); };
   }, []);
 }
 

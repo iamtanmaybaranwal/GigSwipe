@@ -50,9 +50,11 @@ export default defineConfig(({ mode }) => ({
     envModule(),
     react(),
     VitePWA({
-      registerType: 'autoUpdate', // new versions replace the old one on next open
-      injectRegister: 'auto',
-      includeAssets: ['icons/*.png', 'install-ios/*.png'],
+      // The glob below already precaches every icon and image; adding the manifest icons
+      // again creates duplicate entries and the service worker fails to install.
+      includeManifestIcons: false,
+      registerType: 'autoUpdate', // a new version takes over and the page reloads into it
+      injectRegister: false,      // registered in web/main.tsx (with live update checks)
       manifest: {
         id: '/',
         name: 'GigSwipe',
@@ -73,11 +75,13 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ttf,woff2,png,svg,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,ttf,woff2,png,svg,ico}'], // manifest is added by the plugin
+        globIgnores: ['push-sw.js', '**/*.svg'], // push-sw.js is loaded by importScripts; SVGs are only design sources
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/install-ios/],
         cleanupOutdatedCaches: true,
+        importScripts: ['push-sw.js'], // push notifications (web/public/push-sw.js)
         clientsClaim: true,
         skipWaiting: true,
       },

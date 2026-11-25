@@ -116,6 +116,7 @@ router.put(
     optStr('availabilityNote', 200),
     body('availableUntil').optional({ values: 'null' }).isISO8601().withMessage('Invalid time').toDate(),
     body('discoverable').optional().isBoolean().withMessage('discoverable must be true or false').toBoolean(),
+    body('notifyNewGigs').optional().isBoolean().withMessage('notifyNewGigs must be true or false').toBoolean(),
   ],
   ah(async (req, res) => {
     if (sendValidationError(req, res)) return;
@@ -123,7 +124,7 @@ router.put(
     const role = req.user!.role;
     const shared = ['name', 'bio', 'locationLabel', 'latitude', 'longitude', 'radiusMiles', 'photoUrl'];
     const workerOnly = ['skills', 'university', 'major', 'year', 'sampleWork',
-      'availability', 'availabilityNote', 'availableUntil', 'discoverable'];
+      'availability', 'availabilityNote', 'availableUntil', 'discoverable', 'notifyNewGigs'];
     const businessOnly = ['businessName', 'industry', 'location', 'website', 'phone'];
     const allowed = [...shared, ...(role === 'worker' ? workerOnly : businessOnly)];
 

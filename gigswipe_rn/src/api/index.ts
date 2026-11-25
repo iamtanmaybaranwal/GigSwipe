@@ -117,6 +117,13 @@ export const api = {
       request<{ success: boolean }>('POST', `/api/chat/${enc(applicationId)}/read`),
   },
 
+  push: {
+    config: () => request<{ webPushPublicKey: string | null; web: boolean; android: boolean }>('GET', '/api/push/config'),
+    register: (body: { platform: 'web'; subscription: unknown; lang: string } | { platform: 'android'; token: string; lang: string }) =>
+      request<{ success: boolean }>('POST', '/api/push/register', body),
+    unregister: (token: string) => request<{ success: boolean }>('POST', '/api/push/unregister', { token }),
+  },
+
   geo: {
     reverse: (lat: number, lng: number) =>
       request<{ label: string | null }>('GET', `/api/geo/reverse?lat=${lat}&lng=${lng}`),

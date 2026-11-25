@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, errorMessage, type Gig, type GigViewerState } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { useSocketEvent } from '../../hooks';
 import { t } from '../../i18n';
 import { colors, font, radius, spacing, tint } from '../../theme';
 import { Avatar, Banner, Button, ErrorView, Header, IconButton, Loading, Pill } from '../../components/ui';
@@ -24,6 +25,8 @@ export default function GigDetailScreen({ route, navigation }: RootScreen<'GigDe
     api.gigs.get(gigId).then(r => { setGig(r.gig); setViewer(r.viewer); }).catch(e => setError(errorMessage(e)));
   }, [gigId]);
   useEffect(load, [load]);
+  // If the gig closes or fills while you're looking at it, show that right away
+  useSocketEvent<{ gigId: string }>('gig_closed', p => { if (p?.gigId === gigId) load(); });
 
   const apply = async () => {
     if (!gig) return;

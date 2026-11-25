@@ -5,7 +5,7 @@
   "compilerOptions": {
     "lib": ["es2022", "dom", "dom.iterable"],
     "moduleSuffixes": [".web", ""],
-    "types": ["vite/client", "jest"],
+    "types": ["vite/client", "vite-plugin-pwa/client", "jest"],
     "noEmit": true
   },
   "include": ["./*.ts", "./*.tsx", "./shims/**/*.ts", "./types.d.ts", "../App.tsx", "../src/**/*.ts", "../src/**/*.tsx"],

@@ -6,6 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { api, errorMessage, mediaUrl, type Gig } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { useSocketEvent } from '../../hooks';
+import { enablePush, pushState } from '../../services/push';
+import { prefs } from '../../services/device';
 import { t } from '../../i18n';
 import { colors, radius, shadow, tint } from '../../theme';
 import { Avatar, Banner, EmptyState, ErrorView, IconButton, Loading, Pill } from '../../components/ui';
@@ -35,6 +38,8 @@ export default function FeedScreen({ navigation }: WorkerTabScreen<'Discover'>) 
   const [search, setSearch] = useState('');
   const [undo, setUndo] = useState<UndoEntry[]>([]);
   const [undoing, setUndoing] = useState(false);
+  const [newCount, setNewCount] = useState(0);
+  const [alertsPrompt, setAlertsPrompt] = useState(false);
   const loadedOnce = useRef(false);
   const reqId = useRef(0);
 
@@ -45,6 +50,7 @@ export default function FeedScreen({ navigation }: WorkerTabScreen<'Discover'>) 
       const { gigs: list } = await api.gigs.feed(toFeedQuery(f));
       if (id !== reqId.current) return;
       setGigs(list);
+      setNewCount(0);
       setError(null);
     } catch (e) {
       if (id === reqId.current) setError(errorMessage(e));
@@ -79,6 +85,25 @@ export default function FeedScreen({ navigation }: WorkerTabScreen<'Discover'>) 
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
+
+  // Live updates: a gig posted near you, or a gig that stopped taking applications
+  useSocketEvent<{ gigId: string }>('gig_new', () => {
+    if (!loading && gigs.length === 0) load(); // empty deck: just show it
+    else setNewCount(n => n + 1);
+  });
+  useSocketEvent<{ gigId: string }>('gig_closed', p => setGigs(prev => prev.filter(g => g.id !== p?.gigId)));
+
+  // Invite job seekers (once) to get a notification when a gig is posted near them
+  useEffect(() => {
+    if (user?.notifyNewGigs === false || prefs.get('alerts_prompt_dismissed') === '1') return;
+    pushState().then(st => setAlertsPrompt(st === 'needs-permission')).catch(() => {});
+  }, [user?.notifyNewGigs]);
+  const turnOnAlerts = async () => {
+    const ok = await enablePush();
+    setAlertsPrompt(false);
+    prefs.set('alerts_prompt_dismissed', '1');
+    toast(ok ? t("Done! We'll tell you when a gig is posted near you.") : t('Notifications are off. You can turn them on in Settings.'));
+  };
 
   const pushUndo = (e: UndoEntry) => setUndo(u => [e, ...u].slice(0, MAX_UNDO));
   const putBack = (gig: Gig) => setGigs(p => [gig, ...p.filter(g => g.id !== gig.id)]);
@@ -178,6 +203,18 @@ export default function FeedScreen({ navigation }: WorkerTabScreen<'Discover'>) 
         <QuickChip label={t('Remote')} icon="home-outline" on={filters.mode === 'remote'} onPress={() => quickMode('remote')} />
       </ScrollView>
 
+      {alertsPrompt && hasLocation ? (
+        <View style={s.alerts}>
+          <Icon name="notifications" size={20} color={colors.accent} />
+          <Text style={s.alertsText}>{t('Get a notification when a gig is posted near you.')}</Text>
+          <Pressable onPress={turnOnAlerts} style={s.alertsBtn}><Text style={s.alertsBtnText}>{t('Turn on')}</Text></Pressable>
+          <Pressable onPress={() => { setAlertsPrompt(false); prefs.set('alerts_prompt_dismissed', '1'); }} hitSlop={10}
+            accessibilityLabel={t('Close')}>
+            <Icon name="close" size={18} color={colors.subtle} />
+          </Pressable>
+        </View>
+      ) : null}
+
       {!hasLocation && (
         <View style={{ paddingHorizontal: 20, marginBottom: 8 }}>
           <Banner icon="locate-outline" text={t('Set your location to see the closest gigs first.')} action={t('Set up')}
@@ -186,6 +223,14 @@ export default function FeedScreen({ navigation }: WorkerTabScreen<'Discover'>) 
       )}
 
       <View style={s.deckArea}>
+        {newCount > 0 && !loading ? (
+          <Pressable style={s.newPill} onPress={() => load(true)} accessibilityRole="button">
+            <Icon name="arrow-up" size={15} color={colors.white} />
+            <Text style={s.newPillText}>
+              {newCount === 1 ? t('1 new gig nearby · Show') : t('{n} new gigs nearby · Show', { n: newCount })}
+            </Text>
+          </Pressable>
+        ) : null}
         {loading ? (
           <Loading text={t('Finding gigs near you…')} />
         ) : error && gigs.length === 0 ? (
@@ -432,6 +477,14 @@ const s = StyleSheet.create({
   qchipText: { fontSize: 12, fontWeight: '700', color: colors.muted },
 
   deckArea: { flex: 1 },
+  newPill: { position: 'absolute', top: 4, alignSelf: 'center', zIndex: 10, flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: colors.navy, paddingHorizontal: 14, height: 36, borderRadius: radius.pill, ...shadow.raised },
+  newPillText: { color: colors.white, fontSize: 13, fontWeight: '800' },
+  alerts: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 8, padding: 10, paddingLeft: 12,
+    borderRadius: radius.md, backgroundColor: colors.accentLight, borderWidth: 1, borderColor: tint(colors.accent, 0.25) },
+  alertsText: { flex: 1, fontSize: 13, color: colors.body, fontWeight: '600', lineHeight: 18 },
+  alertsBtn: { backgroundColor: colors.accent, paddingHorizontal: 12, height: 32, borderRadius: radius.sm, justifyContent: 'center' },
+  alertsBtnText: { color: colors.white, fontSize: 13, fontWeight: '800' },
   deck: { flex: 1, marginHorizontal: 16, marginTop: 2 },
   cardWrap: { ...StyleSheet.absoluteFill },
   card: { flex: 1, backgroundColor: colors.white, borderRadius: radius.xxl, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderMid, ...shadow.raised },

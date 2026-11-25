@@ -7,6 +7,7 @@ import { serializeGig } from '../utils/serializeGig';
 import { serializePublicUser } from '../utils/serialize';
 import { ah, HttpError, requireId, sendValidationError } from '../utils/http';
 import { assertOwnUploads, statusForOpenings } from '../services/gigs';
+import { announceGigClosed, announceNewGig } from '../services/gigAlerts';
 import GigModel, { PAY_UNITS } from '../models/Gig';
 import UserModel from '../models/User';
 import ApplicationModel from '../models/Application';
@@ -240,6 +241,7 @@ router.post('/', requireAuth, requireRole('business'), gigRules(false), ah(async
   });
 
   res.status(201).json({ gig: serializeGig(gig.toObject()) });
+  void announceNewGig(gig); // live + push alerts to job seekers in range (background)
 }));
 
 // PUT /api/gigs/:id — edit a gig (any subset of fields), or close/reopen it
@@ -254,6 +256,7 @@ router.put('/:id', requireAuth, requireRole('business'), gigRules(true), ah(asyn
 
   const b = req.body;
   const oldTitle = gig.title;
+  const wasOpen = gig.status === 'open';
   for (const key of ['title', 'description', 'category', 'payAmount', 'payUnit'] as const) {
     if (b[key] !== undefined) (gig as any)[key] = b[key];
   }
@@ -306,6 +309,8 @@ router.put('/:id', requireAuth, requireRole('business'), gigRules(true), ah(asyn
   }
 
   await gig.save();
+  if (wasOpen && gig.status !== 'open') announceGigClosed(String(gig._id));
+  if (!wasOpen && gig.status === 'open') void announceNewGig(gig);
   if (gig.title !== oldTitle) {
     await ApplicationModel.updateMany({ gigId: gig._id }, { gigTitle: gig.title });
   }
@@ -325,6 +330,7 @@ router.delete('/:id', requireAuth, ah(async (req, res) => {
     InviteModel.deleteMany({ gigId: gig._id, status: 'pending' }),
   ]);
   await gig.deleteOne();
+  announceGigClosed(String(gig._id));
   res.json({ success: true });
 }));
 

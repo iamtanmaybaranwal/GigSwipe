@@ -17,6 +17,7 @@ export function serializeSelf(u: any) {
   delete out.__v;
   delete out.passwordHash;
   delete out.geo;
+  delete out.gigAlerts;
   out.createdAt = iso(o.createdAt);
   out.updatedAt = iso(o.updatedAt);
   out.availableUntil = iso(o.availableUntil);
@@ -38,6 +39,7 @@ export function serializePublicUser(u: any) {
   delete out.longitude;
   delete out.radiusMiles;
   delete out.discoverable;
+  delete out.notifyNewGigs;
   return out;
 }
 
